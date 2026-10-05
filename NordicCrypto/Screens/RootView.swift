@@ -36,8 +36,22 @@ struct RootView: View {
     #endif
 
     var body: some View {
+        #if os(tvOS)
+        // Apple TV is an information screen: no tabs, nothing to navigate.
+        SignageView()
+            .environment(store)
+            .environment(radio)
+            .task { await store.run() }
+            .onAppear { radio.start() }
+        #else
+        tabs
+        #endif
+    }
+
+    #if !os(tvOS)
+    private var tabs: some View {
         @Bindable var router = router
-        TabView(selection: $router.tab) {
+        return TabView(selection: $router.tab) {
             Tab("Today", systemImage: "sun.horizon", value: AppTab.today) {
                 stack(.today) { TodayView() }
             }
@@ -51,33 +65,16 @@ struct RootView: View {
                 stack(.newsletter) { NewsletterView() }
             }
         }
-        #if os(tvOS)
-        // Apple TV: the classic top tab bar, never a sidebar over the content.
-        .tabViewStyle(.tabBarOnly)
-        #else
         .tabViewStyle(.sidebarAdaptable)
-        #endif
         .tint(NL.accent)
         .environment(store)
         .environment(router)
         .task { await store.run() }
-        #if os(tvOS)
-        .environment(radio)
-        .onAppear { radio.start() }
-        // Play/Pause on the Siri Remote switches the radio on and off.
-        .onPlayPauseCommand { radio.toggle() }
-        .fullScreenCover(item: $router.newsreel, onDismiss: { radio.yield(false) }) { reel in
-            if let url = reel.playableURL {
-                NewsreelPlayer(url: url, title: store.issues.first?.title(for: store.lang) ?? "Nordic Crypto")
-                    .ignoresSafeArea()
-                    .onAppear { radio.yield(true) }
-            }
-        }
-        #endif
         #if DEBUG
         .onAppear(perform: applyScreenshotArguments)
         #endif
     }
+    #endif
 
     private func stack<Content: View>(_ tab: AppTab, @ViewBuilder content: () -> Content) -> some View {
         NavigationStack(path: router.path(tab)) {
@@ -124,7 +121,7 @@ extension Newsreel: Identifiable {
     var id: String { playableURL?.absoluteString ?? "" }
 }
 
-#if DEBUG
+#if DEBUG && !os(tvOS)
 extension RootView {
     /// `-NCScreen today|countries|events|newsletter` and
     /// `-NCOpen story|event|reader|newsreel`, for screenshots and UI tests.
@@ -141,7 +138,6 @@ extension RootView {
         case "story": store.news.first.map { router.open(.story($0)) }
         case "event": store.upcomingEvents.first.map { router.open(.event($0)) }
         case "reader": store.issues.first.flatMap { store.issue($0.id) }.map { router.open(.reader($0)) }
-        case "newsreel": router.newsreel = store.issues.first.flatMap { store.issue($0.id)?.video }
         default: break
         }
     }

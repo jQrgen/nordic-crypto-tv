@@ -11,6 +11,9 @@ LANGS = ["nb", "nn", "sv", "da", "fi", "is"]
 
 T = {
     "%@, %lld stories": ["%@, %lld saker", "%@, %lld saker", "%@, %lld nyheter", "%@, %lld historier", "%@, %lld uutista", "%@, %lld fréttir"],
+    "%lld stories · %lld upcoming events": ["%lld saker · %lld kommende arrangementer", "%lld saker · %lld komande arrangement", "%lld nyheter · %lld kommande evenemang", "%lld historier · %lld kommende begivenheder", "%lld uutista · %lld tulevaa tapahtumaa", "%lld fréttir · %lld væntanlegir viðburðir"],
+    "Latest": ["Siste", "Siste", "Senaste", "Seneste", "Uusimmat", "Nýjast"],
+    "Top topics": ["Mest omtalt", "Mest omtalt", "Mest omtalat", "Mest omtalt", "Puhutuimmat aiheet", "Helstu efni"],
     "%lld events": ["%lld arrangementer", "%lld arrangement", "%lld evenemang", "%lld begivenheder", "%lld tapahtumaa", "%lld viðburðir"],
     "%lld stories": ["%lld saker", "%lld saker", "%lld nyheter", "%lld historier", "%lld uutista", "%lld fréttir"],
     "All": ["Alle", "Alle", "Alla", "Alle", "Kaikki", "Allt"],
@@ -62,6 +65,8 @@ T = {
     "Paywall": ["Betalingsmur", "Betalingsmur", "Betalvägg", "Betalingsmur", "Maksumuuri", "Áskriftarveggur"],
     "QR code linking to %@": ["QR-kode som lenker til %@", "QR-kode som lenkjer til %@", "QR-kod som länkar till %@", "QR-kode, der linker til %@", "QR-koodi, joka johtaa osoitteeseen %@", "QR-kóði sem vísar á %@"],
     "Quiet in %@ — no stories this week": ["Stille i %@ – ingen saker denne uka", "Stille i %@ – ingen saker denne veka", "Tyst i %@ – inga nyheter den här veckan", "Stille i %@ – ingen historier i denne uge", "Hiljaista: %@ – ei uutisia tällä viikolla", "Rólegt í %@ – engar fréttir þessa vikuna"],
+    "Press ⏯ to turn off": ["Trykk ⏯ for å skru av", "Trykk ⏯ for å skru av", "Tryck ⏯ för att stänga av", "Tryk ⏯ for at slukke", "Sammuta painamalla ⏯", "Ýttu á ⏯ til að slökkva"],
+    "Press ⏯ to turn on": ["Trykk ⏯ for å skru på", "Trykk ⏯ for å skru på", "Tryck ⏯ för att sätta på", "Tryk ⏯ for at tænde", "Käynnistä painamalla ⏯", "Ýttu á ⏯ til að kveikja"],
     "Read at %@": ["Les hos %@", "Les hjå %@", "Läs hos %@", "Læs hos %@", "Lue: %@", "Lesa hjá %@"],
     "Read issue": ["Les utgaven", "Les utgåva", "Läs numret", "Læs udgaven", "Lue numero", "Lesa tölublaðið"],
     "Refresh": ["Oppdater", "Oppdater", "Uppdatera", "Opdater", "Päivitä", "Uppfæra"],

@@ -121,6 +121,46 @@
         }
       }
     },
+    "%lld stories · %lld upcoming events": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld saker · %lld kommende arrangementer"
+          }
+        },
+        "nn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld saker · %lld komande arrangement"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld nyheter · %lld kommande evenemang"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld historier · %lld kommende begivenheder"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld uutista · %lld tulevaa tapahtumaa"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld fréttir · %lld væntanlegir viðburðir"
+          }
+        }
+      }
+    },
     "All": {
       "localizations": {
         "nb": {
@@ -637,6 +677,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ísland"
+          }
+        }
+      }
+    },
+    "Latest": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siste"
+          }
+        },
+        "nn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siste"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senaste"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seneste"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uusimmat"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nýjast"
           }
         }
       }
@@ -1521,6 +1601,86 @@
         }
       }
     },
+    "Press ⏯ to turn off": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk ⏯ for å skru av"
+          }
+        },
+        "nn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk ⏯ for å skru av"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck ⏯ för att stänga av"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryk ⏯ for at slukke"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammuta painamalla ⏯"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ýttu á ⏯ til að slökkva"
+          }
+        }
+      }
+    },
+    "Press ⏯ to turn on": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk ⏯ for å skru på"
+          }
+        },
+        "nn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk ⏯ for å skru på"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck ⏯ för att sätta på"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryk ⏯ for at tænde"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käynnistä painamalla ⏯"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ýttu á ⏯ til að kveikja"
+          }
+        }
+      }
+    },
     "QR code linking to %@": {
       "localizations": {
         "nb": {
@@ -2237,6 +2397,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Helstu fréttir"
+          }
+        }
+      }
+    },
+    "Top topics": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mest omtalt"
+          }
+        },
+        "nn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mest omtalt"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mest omtalat"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mest omtalt"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puhutuimmat aiheet"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helstu efni"
           }
         }
       }
