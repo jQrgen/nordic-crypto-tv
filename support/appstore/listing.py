@@ -4,6 +4,7 @@ support/appstore/metadata/<locale>/<field>.txt. Run: python3 support/appstore/li
 App Store Connect has no Nynorsk or Icelandic, so those UI languages fall back to "no" and "en-GB".
 Our own Norwegian text never says "AI" or "KI".
 """
+import json
 import os
 
 SUPPORT_URL = "https://github.com/jQrgen/nordic-crypto/issues"
@@ -185,6 +186,24 @@ Otsikot kuuluvat julkaisijoilleen. Nordic Crypto on uutispalvelu, ei sijoitusneu
 
 LIMITS = {"name": 30, "subtitle": 30, "promotional_text": 170, "keywords": 100, "description": 4000}
 
+# Further languages from the Nordic Crypto API (listing_extra.json), keyed by app language code,
+# published under these App Store Connect locales.
+ASC_LOCALE = {"zh-Hans": "zh-Hans", "hi": "hi", "es": "es-ES", "fr": "fr-FR", "ar": "ar-SA", "bn": "bn-BD",
+              "pt": "pt-BR", "ru": "ru", "ur": "ur-PK", "id": "id", "de": "de-DE", "ja": "ja", "sw": "sw",
+              "mr": "mr-IN"}
+EXTRA = os.path.join(os.path.dirname(__file__), "listing_extra.json")
+if os.path.exists(EXTRA):
+    for lang, fields in json.load(open(EXTRA)).items():
+        LISTING[ASC_LOCALE.get(lang, lang)] = fields
+
+
+def fit_keywords(text, limit=100):
+    """App Store Connect counts the keyword limit in UTF-8 bytes; drop terms from the end to fit."""
+    terms = [t.strip() for t in text.split(",") if t.strip()]
+    while terms and len(",".join(terms).encode()) > limit:
+        terms.pop()
+    return ",".join(terms)
+
 
 def main():
     root = os.path.join(os.path.dirname(__file__), "metadata")
@@ -192,6 +211,8 @@ def main():
         d = os.path.join(root, locale)
         os.makedirs(d, exist_ok=True)
         for field, text in fields.items():
+            if field == "keywords":
+                text = fit_keywords(text)
             assert len(text) <= LIMITS[field], f"{locale}/{field} is {len(text)} > {LIMITS[field]}"
             if locale == "no":
                 assert " AI" not in text and " KI" not in text

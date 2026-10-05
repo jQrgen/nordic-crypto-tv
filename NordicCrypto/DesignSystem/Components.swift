@@ -164,7 +164,7 @@ struct DateTile: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(date.map { $0.formatted(.dateTime.day().locale(Formats.locale(lang))) } ?? "–")
+            Text(date.map { Formats.dayNumber($0, lang: lang) } ?? "–")
                 .font(NLFont.dateDay)
                 .monospacedDigit()
                 .foregroundStyle(NL.textPrimary)
@@ -450,6 +450,12 @@ enum Formats {
     static func time(_ date: Date?, lang: String) -> String {
         guard let date else { return "--:--" }
         return date.formatted(.dateTime.hour().minute().locale(locale(lang)))
+    }
+
+    /// Just the day of the month in the language's digits ("14", not "14日"),
+    /// for date tiles that show the month on a line of their own.
+    static func dayNumber(_ date: Date, lang: String) -> String {
+        Calendar.current.component(.day, from: date).formatted(.number.locale(locale(lang)))
     }
 
     static func day(_ date: Date?, lang: String) -> String {

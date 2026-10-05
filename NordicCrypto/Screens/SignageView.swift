@@ -327,7 +327,7 @@ private struct CompactDate: View {
 
     var body: some View {
         VStack(spacing: -2) {
-            Text(date.map { $0.formatted(.dateTime.day().locale(Formats.locale(lang))) } ?? "–")
+            Text(date.map { Formats.dayNumber($0, lang: lang) } ?? "–")
                 .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(NL.textPrimary)
             Text(date.map { $0.formatted(.dateTime.month(.abbreviated).locale(Formats.locale(lang))) } ?? "")

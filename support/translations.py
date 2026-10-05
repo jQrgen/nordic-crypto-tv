@@ -93,14 +93,23 @@ T = {
 }
 
 
+# The Nordic Crypto API's further interface languages: support/translations_extra.json maps
+# each English key to {lang: text} for zh-Hans, hi, es, fr, ar, bn, pt, ru, ur, id, de, ja, sw, mr.
+EXTRA = os.path.join(os.path.dirname(__file__), "translations_extra.json")
+
+
 def main():
+    extra = json.load(open(EXTRA)) if os.path.exists(EXTRA) else {}
     strings = {}
     for key, values in T.items():
         assert len(values) == len(LANGS), key
         for v in values[:2]:
             assert " AI" not in v and " KI" not in v, v
-        strings[key] = {"localizations": {l: {"stringUnit": {"state": "translated", "value": v}}
-                                          for l, v in zip(LANGS, values)}}
+        locs = {l: {"stringUnit": {"state": "translated", "value": v}} for l, v in zip(LANGS, values)}
+        for lang, v in extra.get(key, {}).items():
+            assert v.count("%@") == key.count("%@") and v.count("%lld") == key.count("%lld"), (key, lang)
+            locs[lang] = {"stringUnit": {"state": "translated", "value": v}}
+        strings[key] = {"localizations": locs}
     out = {"sourceLanguage": "en", "strings": dict(sorted(strings.items())), "version": "1.0"}
     path = os.path.join(os.path.dirname(__file__), "..", "NordicCrypto", "Localizable.xcstrings")
     with open(path, "w") as f:

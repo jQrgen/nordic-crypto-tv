@@ -1,0 +1,33 @@
+Nordic Crypto rassemble en un seul endroit, calme et clair, l'actualité bitcoin, crypto et blockchain de Norvège, de Suède, du Danemark, de Finlande et d'Islande.
+
+Chaque article est accompagné d'un court résumé rédigé par l'équipe Nordic Crypto et d'un lien vers la source d'origine. Chaque brouillon est vérifié avant publication.
+
+À noter : l'interface de l'app est en français, mais les résumés des articles sont rédigés en anglais et dans les langues nordiques (norvégien, suédois, danois, finnois et islandais).
+
+AUJOURD'HUI
+• Les trois actualités majeures d'abord, puis tout le reste jour par jour
+• Les meetups et conférences à venir directement en page d'accueil
+• Des illustrations générées à partir des couleurs de chaque pays et de chaque thème
+
+PAYS
+• Une vue par pays, avec l'heure locale et les derniers articles
+• Réglementation, MiCA, fiscalité, criminalité, entreprises et plus, classés par thème
+
+ÉVÉNEMENTS
+• Meetups, conférences et présentations dans tous les pays nordiques, triés par date
+• Mention claire des événements gratuits, payants, sponsorisés et en ligne
+
+NEWSLETTER
+• Le numéro hebdomadaire de Nordic Crypto à lire dans l'app
+• La vidéo d'actualité de chaque numéro
+
+SUR TOUS LES ÉCRANS
+• iPhone et iPad, avec Taille du texte dynamique et VoiceOver
+• Mac, dans sa propre fenêtre avec barre latérale
+• Apple Vision Pro, avec la vidéo d'actualité dans sa propre fenêtre
+• Apple TV comme écran d'information : actualités principales, événements, une rangée par pays et les derniers titres, chacun défilant à son rythme, avec Radio Norge en fond sonore. La touche Lecture/Pause de la télécommande allume ou éteint la radio.
+
+CONFIDENTIALITÉ DÈS LA CONCEPTION
+Pas de compte, pas de pistage, pas de publicité. L'app lit uniquement des données d'actualité publiques.
+
+Les titres appartiennent à leurs éditeurs. Nordic Crypto est un service d'information et ne constitue pas un conseil en investissement.

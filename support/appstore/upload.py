@@ -24,7 +24,8 @@ BUNDLE_ID = "no.cryptonordic.tv"
 VERSION = "1.1.0"
 API = "https://api.appstoreconnect.apple.com/v1"
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOCALES = ["en-GB", "no", "sv", "da", "fi"]
+# Every locale that listing.py wrote (en-GB first: the app's primary locale).
+LOCALES = ["en-GB"] + sorted(d for d in os.listdir(os.path.join(HERE, "metadata")) if d != "en-GB")
 PLATFORMS = {"IOS": ["iphone-6.9", "ipad-13"], "TV_OS": ["appletv"], "VISION_OS": ["vision"], "MAC_OS": ["mac"]}
 DISPLAY_TYPE = {
     "iphone-6.9": "APP_IPHONE_67",
@@ -79,8 +80,12 @@ def upsert_localization(asc, kind, parent_rel, parent_id, existing, locale, attr
                   {"data": {"type": kind, "id": existing[locale], "attributes": attrs}})
         print(f"  updated {kind} {locale}")
         return existing[locale]
-    res = asc.write("POST", f"/{kind}", {"data": {"type": kind, "attributes": {"locale": locale, **attrs},
-                                                  "relationships": {parent_rel: {"data": {"type": parent_rel + "s", "id": parent_id}}}}})
+    try:
+        res = asc.write("POST", f"/{kind}", {"data": {"type": kind, "attributes": {"locale": locale, **attrs},
+                                                      "relationships": {parent_rel: {"data": {"type": parent_rel + "s", "id": parent_id}}}}})
+    except requests.HTTPError:
+        print(f"  skipped {kind} {locale} (not accepted by App Store Connect)")
+        return None
     print(f"  created {kind} {locale}")
     return res["data"]["id"]
 
@@ -167,6 +172,8 @@ def main():
                 "promotionalText": text(locale, "promotional_text"), "supportUrl": text(locale, "support_url"),
                 "marketingUrl": text(locale, "marketing_url")})
             # Each locale gets screenshots in its own language; English is the fallback.
+            if loc_id is None:
+                continue
             lang = "en" if locale.startswith("en") else locale
             for device in devices:
                 files = sorted(glob.glob(os.path.join(args.screenshots, device, lang, "*.png"))) or \
