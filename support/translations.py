@@ -4,10 +4,13 @@ Order of each row: nb, nn, sv, da, fi, is. Run from the repo root:
 python3 support/translations.py
 Our own Norwegian text never says "AI" or "KI" (Nordic Crypto text rule).
 """
+import glob
 import json
 import os
 
 LANGS = ["nb", "nn", "sv", "da", "fi", "is"]
+# Brand names that stay as they are.
+NO_TRANSLATE = ["Nordic Crypto"]
 
 T = {
     "%@, %lld stories": ["%@, %lld saker", "%@, %lld saker", "%@, %lld nyheter", "%@, %lld historier", "%@, %lld uutista", "%@, %lld fréttir"],
@@ -110,6 +113,17 @@ def main():
             assert v.count("%@") == key.count("%@") and v.count("%lld") == key.count("%lld"), (key, lang)
             locs[lang] = {"stringUnit": {"state": "translated", "value": v}}
         strings[key] = {"localizations": locs}
+    # Later batches: keys with every language in one file (Nordic and further languages alike).
+    for batch in sorted(glob.glob(os.path.join(os.path.dirname(__file__), "translations_batch*.json"))):
+        for key, langs in json.load(open(batch)).items():
+            for lang, v in langs.items():
+                assert v.count("%@") == key.count("%@") and v.count("%lld") == key.count("%lld"), (key, lang)
+                if lang in ("nb", "nn"):
+                    assert " AI" not in v and " KI" not in v, v
+            strings[key] = {"localizations": {l: {"stringUnit": {"state": "translated", "value": v}}
+                                              for l, v in langs.items()}}
+    for key in NO_TRANSLATE:
+        strings[key] = {"shouldTranslate": False}
     out = {"sourceLanguage": "en", "strings": dict(sorted(strings.items())), "version": "1.0"}
     path = os.path.join(os.path.dirname(__file__), "..", "NordicCrypto", "Localizable.xcstrings")
     with open(path, "w") as f:

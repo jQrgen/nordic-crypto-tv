@@ -70,6 +70,11 @@ struct RootView: View {
         .environment(store)
         .environment(router)
         .task { await store.run() }
+        .onReceive(NotificationCenter.default.publisher(for: .openStory)) { note in
+            guard let id = note.object as? String, let item = store.news.first(where: { $0.id == id }) else { return }
+            router.tab = .today
+            router.paths[.today] = [.story(item)]
+        }
         #if DEBUG
         .onAppear(perform: applyScreenshotArguments)
         #endif

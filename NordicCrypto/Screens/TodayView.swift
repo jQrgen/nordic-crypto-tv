@@ -4,10 +4,30 @@ import SwiftUI
 /// from the fourth, grouped by day, with times instead of rank numbers.
 struct TodayView: View {
     @Environment(FeedStore.self) private var store
+    @State private var showAlerts = false
 
     var body: some View {
         content
             .background(NLBackground())
+            #if os(iOS)
+            .toolbar {
+                ToolbarItem {
+                    Button { showAlerts = true } label: { Label("Notifications", systemImage: "bell") }
+                }
+            }
+            .sheet(isPresented: $showAlerts) {
+                NavigationStack { AlertSettingsView() }
+            }
+            #if DEBUG
+            .onAppear { if ProcessInfo.processInfo.arguments.contains("-NCAlerts") { showAlerts = true } }
+            #endif
+            #elseif os(macOS)
+            .toolbar {
+                ToolbarItem {
+                    SettingsLink { Label("Notifications", systemImage: "bell") }
+                }
+            }
+            #endif
             #if !os(tvOS)
             .navigationTitle("Today")
             .refreshable { await store.refresh() }

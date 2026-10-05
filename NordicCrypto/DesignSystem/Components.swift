@@ -275,7 +275,8 @@ struct SourceLogo: View {
 
     var body: some View {
         ZStack {
-            if let url {
+            // Apple platforms cannot draw SVG; those keep the monogram.
+            if let url, url.pathExtension.lowercased() != "svg" {
                 AsyncImage(url: APIConfig.reachable(url)) { image in
                     image.resizable().scaledToFit().padding(size * 0.08)
                         .background(.white)

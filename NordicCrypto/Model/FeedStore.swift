@@ -16,6 +16,11 @@ final class FeedStore {
     private(set) var issueDetails: [String: NewsletterIssue] = [:]
     /// Approved outlet logos by source id.
     private(set) var sourceLogos: [String: URL] = [:]
+    /// Who's who and academia, shuffled once per launch for the TV spotlight.
+    private(set) var spotlight: [SpotlightItem] = []
+    private(set) var entities: [String: OrgEntity] = [:]
+    private var orgChart: [OrgEntity] = []
+    private var academia: [AcademiaItem] = []
     private(set) var updated: Date?
     private(set) var status: Status = .loading
 
@@ -76,6 +81,9 @@ final class FeedStore {
         if let feed = client.offline(EventsFeed.self, path: "events.json") { events = feed.events }
         if let feed = client.offline(NewslettersFeed.self, path: "newsletters.json") { applyIssues(feed.issues) }
         if let feed = client.offline(SourcesFeed.self, path: "sources.json") { applySources(feed) }
+        if let feed = client.offline(OrgChartFeed.self, path: "orgchart.json") { orgChart = feed.entities }
+        if let feed = client.offline(AcademiaFeed.self, path: "academia.json") { academia = feed.all }
+        rebuildSpotlight()
         for issue in issues {
             if let detail = client.offline(NewsletterEnvelope.self, path: "newsletters/\(issue.id).json") {
                 issueDetails[issue.id] = detail.item
@@ -98,10 +106,18 @@ final class FeedStore {
             async let issuesFeed = client.fetch(NewslettersFeed.self, path: "newsletters.json")
             let (n, e, i) = try await (newsFeed, eventsFeed, issuesFeed)
             apply(n)
+            #if os(iOS) || os(macOS)
+            NewsAlerts.shared.process(n.items, lang: lang)
+            #endif
             events = e.events
             applyIssues(i.issues)
             status = .live(.now)
             if let sources = try? await client.fetch(SourcesFeed.self, path: "sources.json") { applySources(sources) }
+            #if os(tvOS)
+            if let feed = try? await client.fetch(OrgChartFeed.self, path: "orgchart.json") { orgChart = feed.entities }
+            if let feed = try? await client.fetch(AcademiaFeed.self, path: "academia.json") { academia = feed.all }
+            rebuildSpotlight()
+            #endif
             for issue in issues where issueDetails[issue.id]?.text == nil || issue.id == issues.first?.id {
                 if let detail = try? await client.fetch(NewsletterEnvelope.self, path: "newsletters/\(issue.id).json") {
                     issueDetails[issue.id] = detail.item
@@ -115,6 +131,17 @@ final class FeedStore {
     private func apply(_ feed: NewsFeed) {
         news = feed.items.sorted { ($0.published ?? .distantPast) > ($1.published ?? .distantPast) }
         updated = feed.updated ?? feed.generatedAt
+    }
+
+    /// Mixes people, companies, public bodies and academia into one random
+    /// order, keeping the current order for items that were already there.
+    private func rebuildSpotlight() {
+        entities = Dictionary(orgChart.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let fresh = orgChart.map(SpotlightItem.entity) + academia.map(SpotlightItem.academia)
+        let known = Set(spotlight.map(\.id))
+        let kept = spotlight.filter { item in fresh.contains { $0.id == item.id } }
+        spotlight = kept + fresh.filter { !known.contains($0.id) }.shuffled()
+        if kept.isEmpty { spotlight.shuffle() }
     }
 
     private func applySources(_ feed: SourcesFeed) {
