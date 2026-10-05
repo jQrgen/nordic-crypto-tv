@@ -1,6 +1,6 @@
 #!/bin/sh
 # Takes one 1920x1080 screenshot per screen from a booted tvOS simulator.
-# Usage: support/screenshots.sh <simulator-id> <path/to/Nordic Crypto.app> <out-dir>
+# Usage: [NC_LANG=nb] support/screenshots.sh <simulator-id> <path/to/Nordic Crypto.app> <out-dir>
 set -e
 SIM="$1"; APP="$2"; OUT="$3"
 mkdir -p "$OUT"
@@ -8,6 +8,7 @@ xcrun simctl install "$SIM" "$APP"
 shot() {
   name="$1"; shift
   xcrun simctl terminate "$SIM" no.cryptonordic.tv 2>/dev/null || true
+  if [ -n "$NC_LANG" ]; then set -- "$@" -AppleLanguages "($NC_LANG)"; fi
   xcrun simctl launch "$SIM" no.cryptonordic.tv "$@" >/dev/null
   sleep 5
   xcrun simctl io "$SIM" screenshot "$OUT/$name.png" >/dev/null 2>&1
