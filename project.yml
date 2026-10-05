@@ -1,0 +1,55 @@
+name: NordicCryptoTV
+options:
+  bundleIdPrefix: no.cryptonordic
+  deploymentTarget:
+    tvOS: "18.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    # Set the App Store team before archiving, e.g. DEVELOPMENT_TEAM: ABCDE12345
+targets:
+  NordicCryptoTV:
+    type: application
+    platform: tvOS
+    sources:
+      - path: NordicCryptoTV
+        excludes:
+          - Resources/Snapshot
+      - path: NordicCryptoTV/Resources/Snapshot
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: no.cryptonordic.tv
+        PRODUCT_NAME: Nordic Crypto
+        INFOPLIST_FILE: NordicCryptoTV/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "3"
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+  NordicCryptoTVTests:
+    type: bundle.unit-test
+    platform: tvOS
+    sources:
+      - NordicCryptoTVTests
+    dependencies:
+      - target: NordicCryptoTV
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Nordic Crypto.app/Nordic Crypto"
+schemes:
+  NordicCryptoTV:
+    build:
+      targets:
+        NordicCryptoTV: all
+        NordicCryptoTVTests: [test]
+    test:
+      targets:
+        - NordicCryptoTVTests
