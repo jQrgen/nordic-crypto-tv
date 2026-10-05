@@ -3,7 +3,7 @@
 # Run from the repo root: support/refresh_snapshot.sh
 set -e
 BASE="${NC_API_BASE:-https://raw.githubusercontent.com/jQrgen/nordic-crypto/gh-pages/api/v1}"
-DIR=NordicCryptoTV/Resources/Snapshot
+DIR=NordicCrypto/Resources/Snapshot
 mkdir -p "$DIR/newsletters"
 for p in news.json events.json newsletters.json; do
   curl -fsS --max-time 30 "$BASE/$p" -o "$DIR/$p"
