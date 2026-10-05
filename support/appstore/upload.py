@@ -57,7 +57,8 @@ class ASC:
 
     def write(self, method, path, body):
         if self.dry_run:
-            print("  [dry-run]", method, path, list(body["data"].get("attributes", {}).keys()))
+            data = body["data"]
+            print("  [dry-run]", method, path, list(data.get("attributes", {}).keys()) if isinstance(data, dict) else data)
             return {"data": {"id": "dry-run", "attributes": {}}}
         r = requests.request(method, API + path, headers=self.headers(), json=body)
         if r.status_code >= 400:

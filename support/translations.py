@@ -44,6 +44,7 @@ T = {
     "No upcoming events": ["Ingen kommende arrangementer", "Ingen komande arrangement", "Inga kommande evenemang", "Ingen kommende begivenheder", "Ei tulevia tapahtumia", "Engir væntanlegir viðburðir"],
     "Nordic Crypto summary": ["Sammendrag fra Nordic Crypto", "Samandrag frå Nordic Crypto", "Sammanfattning från Nordic Crypto", "Resumé fra Nordic Crypto", "Nordic Crypton tiivistelmä", "Samantekt Nordic Crypto"],
     "Norway": ["Norge", "Noreg", "Norge", "Norge", "Norja", "Noregur"],
+    "Not investment advice": ["Ikke investeringsråd", "Ikkje investeringsråd", "Inte investeringsråd", "Ikke investeringsrådgivning", "Ei sijoitusneuvontaa", "Ekki fjárfestingarráðgjöf"],
     "Not investment advice · Headlines © their publishers · Summaries by Nordic Crypto": [
         "Ikke investeringsråd · Overskrifter © utgiverne · Sammendrag av Nordic Crypto",
         "Ikkje investeringsråd · Overskrifter © utgjevarane · Samandrag av Nordic Crypto",

@@ -1081,6 +1081,46 @@
         }
       }
     },
+    "Not investment advice": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke investeringsråd"
+          }
+        },
+        "nn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikkje investeringsråd"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inte investeringsråd"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke investeringsrådgivning"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ei sijoitusneuvontaa"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekki fjárfestingarráðgjöf"
+          }
+        }
+      }
+    },
     "Not investment advice · Headlines © their publishers · Summaries by Nordic Crypto": {
       "localizations": {
         "nb": {
