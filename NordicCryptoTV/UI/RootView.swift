@@ -26,6 +26,9 @@ struct RootView: View {
             .padding(.horizontal, 80)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
+            // Pressing down from any function key lands in the content, even
+            // when nothing focusable sits directly below that key.
+            .focusSection()
 
             TickerTape(items: store.news, lang: store.lang)
         }

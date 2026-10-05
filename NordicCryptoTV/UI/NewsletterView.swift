@@ -85,6 +85,7 @@ struct IssueHero: View {
                         .fixedSize()
                     }
                 }
+                .focusSection()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
