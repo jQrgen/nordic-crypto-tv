@@ -15,6 +15,8 @@ struct NordicCryptoApp: App {
         }
         #if os(visionOS)
         .defaultSize(width: 1280, height: 820)
+        #elseif os(macOS)
+        .defaultSize(width: 1440, height: 872)
         #endif
 
         #if os(visionOS)

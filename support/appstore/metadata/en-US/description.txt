@@ -1,0 +1,31 @@
+Nordic Crypto collects bitcoin, crypto and blockchain news from Norway, Sweden, Denmark, Finland and Iceland in one calm place.
+
+Every story gets a short summary written by the Nordic Crypto team, in English, Norwegian, Swedish, Danish, Finnish and Icelandic, with a link to the original source. Drafts are checked before anything is published.
+
+TODAY
+• The three biggest stories first, then everything else by day
+• Upcoming meetups and conferences right on the front page
+• Story art generated from each country's and topic's colours
+
+COUNTRIES
+• One view per country, with the local time and the latest stories
+• Regulation, MiCA, tax, crime, business and more, tagged by topic
+
+EVENTS
+• Meetups, conferences and talks across the Nordics, sorted by date
+• Clear labels for free, paid, sponsored and online events
+
+NEWSLETTER
+• The weekly Nordic Crypto issue to read in the app
+• The newsreel video for each issue
+
+ON EVERY SCREEN
+• iPhone and iPad, with Dynamic Type and VoiceOver
+• Mac, in its own window with a sidebar
+• Apple Vision Pro, with the newsreel in a window of its own
+• Apple TV as an information screen: lead stories, events, a row per country and the latest headlines, each rotating on its own, with Radio Norge in the background. Play/Pause on the remote switches the radio on or off.
+
+PRIVATE BY DESIGN
+No account, no tracking, no ads. The app only reads public news data.
+
+Headlines belong to their publishers. Nordic Crypto is news, not investment advice.
