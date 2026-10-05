@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """App Store listing text for Nordic Crypto, in the fastlane `deliver` layout:
 support/appstore/metadata/<locale>/<field>.txt. Run: python3 support/appstore/listing.py
-App Store Connect has no Nynorsk or Icelandic, so those UI languages fall back to "no" and "en-US".
+App Store Connect has no Nynorsk or Icelandic, so those UI languages fall back to "no" and "en-GB".
 Our own Norwegian text never says "AI" or "KI".
 """
 import os
@@ -11,7 +11,7 @@ PRIVACY_URL = "https://jqrgen.github.io/nordic-crypto/privacy/"  # must be live 
 MARKETING_URL = "https://jqrgen.github.io/nordic-crypto/"
 
 LISTING = {
-    "en-US": {
+    "en-GB": {
         "name": "Nordic Crypto",
         "subtitle": "Crypto news from the Nordics",
         "promotional_text": "Bitcoin, crypto and blockchain news from Norway, Sweden, Denmark, Finland and Iceland, summarised in your language, with events and the newsletter.",

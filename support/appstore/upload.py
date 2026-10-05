@@ -8,7 +8,7 @@ Requires: pip install pyjwt cryptography requests
 
 Text comes from support/appstore/metadata/<locale>/*.txt (see listing.py). Screenshots come from
 DIR/<device>/<lang>/*.png, where device is iphone-6.9, ipad-13, appletv, vision or mac and lang is
-"en" (used for every locale without its own set) or "no".
+"en" (en-GB, and the fallback for any locale without its own set), "no", "sv", "da" or "fi".
 """
 import argparse
 import glob
@@ -24,7 +24,7 @@ BUNDLE_ID = "no.cryptonordic.tv"
 VERSION = "1.1.0"
 API = "https://api.appstoreconnect.apple.com/v1"
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOCALES = ["en-US", "no", "sv", "da", "fi"]
+LOCALES = ["en-GB", "no", "sv", "da", "fi"]
 PLATFORMS = {"IOS": ["iphone-6.9", "ipad-13"], "TV_OS": ["appletv"], "VISION_OS": ["vision"], "MAC_OS": ["mac"]}
 DISPLAY_TYPE = {
     "iphone-6.9": "APP_IPHONE_67",
@@ -165,7 +165,8 @@ def main():
                 "description": text(locale, "description"), "keywords": text(locale, "keywords"),
                 "promotionalText": text(locale, "promotional_text"), "supportUrl": text(locale, "support_url"),
                 "marketingUrl": text(locale, "marketing_url")})
-            lang = "no" if locale == "no" else "en"
+            # Each locale gets screenshots in its own language; English is the fallback.
+            lang = "en" if locale.startswith("en") else locale
             for device in devices:
                 files = sorted(glob.glob(os.path.join(args.screenshots, device, lang, "*.png"))) or \
                     sorted(glob.glob(os.path.join(args.screenshots, device, "en", "*.png")))
