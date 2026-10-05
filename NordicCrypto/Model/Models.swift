@@ -19,7 +19,10 @@ struct NewsItem: Decodable, Identifiable, Hashable {
     var url: URL?
     var title: String
     var titleEn: String?
+    var source: String?
     var sourceName: String?
+    /// The outlet's logo, once the editors have approved it.
+    var sourceLogoURL: URL?
     var country: String?
     var language: String?
     var languageCode: String?
@@ -32,7 +35,9 @@ struct NewsItem: Decodable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, url, title, country, language, published, topics, summary, paywall
+        case source
         case titleEn = "title_en", sourceName = "source_name", languageCode = "language_code"
+        case sourceLogoURL = "source_logo_url"
         case summaryI18n = "summary_i18n", ownStory = "own_story"
     }
 
@@ -42,7 +47,9 @@ struct NewsItem: Decodable, Identifiable, Hashable {
         title = try c.decode(String.self, forKey: .title)
         url = try? c.decodeIfPresent(URL.self, forKey: .url)
         titleEn = try c.decodeIfPresent(String.self, forKey: .titleEn)
+        source = try? c.decodeIfPresent(String.self, forKey: .source)
         sourceName = try c.decodeIfPresent(String.self, forKey: .sourceName)
+        sourceLogoURL = try? c.decodeIfPresent(URL.self, forKey: .sourceLogoURL)
         country = try c.decodeIfPresent(String.self, forKey: .country)
         language = try c.decodeIfPresent(String.self, forKey: .language)
         languageCode = try c.decodeIfPresent(String.self, forKey: .languageCode)
@@ -68,6 +75,28 @@ struct NewsItem: Decodable, Identifiable, Hashable {
 
     func summary(for lang: String) -> String? {
         summaryI18n[lang] ?? summary
+    }
+}
+
+struct SourcesFeed: Decodable {
+    var sources: [Source]
+
+    struct Source: Decodable {
+        var id: String
+        var name: String?
+        var logoURL: URL?
+
+        enum CodingKeys: String, CodingKey {
+            case id, name
+            case logoURL = "logo_url"
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            name = try? c.decodeIfPresent(String.self, forKey: .name)
+            logoURL = try? c.decodeIfPresent(URL.self, forKey: .logoURL)
+        }
     }
 }
 
@@ -236,17 +265,21 @@ enum Country: String, CaseIterable, Identifiable {
 }
 
 enum AppLanguage {
-    /// Languages the API translates our own text into.
+    /// Languages the API translates our own text (summaries, notes) into.
     static let supported = ["nb", "nn", "sv", "da", "fi", "is"]
 
-    /// The best API language for this device: nb, nn, sv, da, fi, is or en.
+    /// Interface languages beyond the Nordic set (Nordic Crypto API language list).
+    /// Summaries stay in English for these.
+    static let interfaceOnly = ["zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur", "id", "de", "ja", "sw", "mr"]
+
+    /// The best language for this device: a Nordic code, one of `interfaceOnly`, or en.
     static var current: String { resolve(Locale.preferredLanguages) }
 
     static func resolve(_ preferred: [String]) -> String {
         for tag in preferred {
             let code = Locale(identifier: tag).language.languageCode?.identifier ?? tag
             if code == "no" { return "nb" }
-            if supported.contains(code) || code == "en" { return code }
+            if supported.contains(code) || interfaceOnly.contains(code) || code == "en" { return code }
         }
         return "en"
     }

@@ -30,8 +30,10 @@ final class SnapshotDecodingTests: XCTestCase {
         XCTAssertEqual(AppLanguage.resolve(["no"]), "nb")
         XCTAssertEqual(AppLanguage.resolve(["nn-NO"]), "nn")
         XCTAssertEqual(AppLanguage.resolve(["sv-SE", "en"]), "sv")
-        XCTAssertEqual(AppLanguage.resolve(["de-DE", "da"]), "da")
-        XCTAssertEqual(AppLanguage.resolve(["de-DE"]), "en")
+        XCTAssertEqual(AppLanguage.resolve(["ko-KR", "da"]), "da")
+        XCTAssertEqual(AppLanguage.resolve(["de-DE"]), "de")
+        XCTAssertEqual(AppLanguage.resolve(["zh-Hans-CN"]), "zh")
+        XCTAssertEqual(AppLanguage.resolve(["it-IT"]), "en")
     }
 
     func testNorwegianReaderSeesOriginalNorwegianHeadline() throws {

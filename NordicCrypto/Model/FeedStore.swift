@@ -14,6 +14,8 @@ final class FeedStore {
     private(set) var events: [EventItem] = []
     private(set) var issues: [NewsletterIssue] = []
     private(set) var issueDetails: [String: NewsletterIssue] = [:]
+    /// Approved outlet logos by source id.
+    private(set) var sourceLogos: [String: URL] = [:]
     private(set) var updated: Date?
     private(set) var status: Status = .loading
 
@@ -65,10 +67,15 @@ final class FeedStore {
 
     func issue(_ id: String) -> NewsletterIssue? { issueDetails[id] }
 
+    func logo(for item: NewsItem) -> URL? {
+        item.sourceLogoURL ?? item.source.flatMap { sourceLogos[$0] }
+    }
+
     private func loadOffline() {
         if let feed = client.offline(NewsFeed.self, path: "news.json") { apply(feed) }
         if let feed = client.offline(EventsFeed.self, path: "events.json") { events = feed.events }
         if let feed = client.offline(NewslettersFeed.self, path: "newsletters.json") { applyIssues(feed.issues) }
+        if let feed = client.offline(SourcesFeed.self, path: "sources.json") { applySources(feed) }
         for issue in issues {
             if let detail = client.offline(NewsletterEnvelope.self, path: "newsletters/\(issue.id).json") {
                 issueDetails[issue.id] = detail.item
@@ -94,6 +101,7 @@ final class FeedStore {
             events = e.events
             applyIssues(i.issues)
             status = .live(.now)
+            if let sources = try? await client.fetch(SourcesFeed.self, path: "sources.json") { applySources(sources) }
             for issue in issues where issueDetails[issue.id]?.text == nil || issue.id == issues.first?.id {
                 if let detail = try? await client.fetch(NewsletterEnvelope.self, path: "newsletters/\(issue.id).json") {
                     issueDetails[issue.id] = detail.item
@@ -107,6 +115,11 @@ final class FeedStore {
     private func apply(_ feed: NewsFeed) {
         news = feed.items.sorted { ($0.published ?? .distantPast) > ($1.published ?? .distantPast) }
         updated = feed.updated ?? feed.generatedAt
+    }
+
+    private func applySources(_ feed: SourcesFeed) {
+        sourceLogos = Dictionary(feed.sources.compactMap { s in s.logoURL.map { (s.id, $0) } },
+                                 uniquingKeysWith: { first, _ in first })
     }
 
     private func applyIssues(_ list: [NewsletterIssue]) {

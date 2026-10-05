@@ -260,14 +260,76 @@ struct StatusPill: View {
     }
 }
 
+/// The outlet's logo; until one is approved, a monogram in a colour of its
+/// own, so a newspaper is always recognisable at a glance.
+struct SourceLogo: View {
+    let name: String?
+    let url: URL?
+    var size: CGFloat = {
+        #if os(tvOS)
+        34
+        #else
+        20
+        #endif
+    }()
+
+    var body: some View {
+        ZStack {
+            if let url {
+                AsyncImage(url: APIConfig.reachable(url)) { image in
+                    image.resizable().scaledToFit().padding(size * 0.08)
+                        .background(.white)
+                } placeholder: {
+                    monogram
+                }
+            } else {
+                monogram
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
+        .accessibilityHidden(true)
+    }
+
+    private var monogram: some View {
+        let label = Self.initials(name)
+        return RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+            .fill(Self.color(name))
+            .overlay {
+                Text(verbatim: label)
+                    .font(.system(size: size * (label.count > 2 ? 0.34 : 0.44), weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                    .padding(size * 0.06)
+            }
+    }
+
+    /// "E24" stays "E24", "Dagens Næringsliv" becomes "DN", "Realtid" "R".
+    static func initials(_ name: String?) -> String {
+        let words = (name ?? "?").split(whereSeparator: { $0 == " " || $0 == "-" }).map(String.init)
+            .filter { !$0.hasPrefix("(") }
+        if let first = words.first, first.count <= 3, first == first.uppercased() { return first }
+        return String(words.prefix(2).compactMap(\.first)).uppercased()
+    }
+
+    static func color(_ name: String?) -> Color {
+        let palette: [UInt32] = [0x5B6CFF, 0x0E8F63, 0xC8323F, 0x9C6F00, 0x1F63D1, 0x0B827A, 0x8B4FD6, 0xC23A6A, 0x2E7D99]
+        let h = AuroraArt.hash(name ?? "")
+        return Color(hex: palette[Int(h % UInt64(palette.count))])
+    }
+}
+
 struct Kicker: View {
     let item: NewsItem
     let lang: String
     var showPaywall = true
+    @Environment(FeedStore.self) private var store
 
     var body: some View {
         HStack(spacing: 10) {
             CountryChip(code: item.country)
+            SourceLogo(name: item.sourceName, url: store.logo(for: item))
             Text(verbatim: [item.sourceName, Formats.stamp(item.published, lang: lang)].compactMap { $0 }.joined(separator: " · "))
                 .font(NLFont.kicker)
                 .tracking(0.4)

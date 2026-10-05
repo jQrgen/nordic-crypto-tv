@@ -104,11 +104,21 @@ private struct StoryText: View {
     let item: NewsItem
     let lang: String
     var focused: FocusState<Bool>.Binding
+    @Environment(FeedStore.self) private var store
+
+    private var logoSize: CGFloat {
+        #if os(tvOS)
+        44
+        #else
+        28
+        #endif
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(spacing: 10) {
                 CountryChip(code: item.country)
+                SourceLogo(name: item.sourceName, url: store.logo(for: item), size: logoSize)
                 Text(verbatim: [item.sourceName, item.published.map { Formats.dayTime($0, lang: lang) }].compactMap { $0 }.joined(separator: " · "))
                     .font(NLFont.kicker)
                     .foregroundStyle(NL.textSecondary)

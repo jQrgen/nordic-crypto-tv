@@ -379,10 +379,13 @@ private struct CountryCell: View {
                 } else {
                     Rotating(items: items, interval: 11, offset: offset) { item, _ in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(verbatim: [item.sourceName, Formats.stamp(item.published, lang: store.lang)].compactMap { $0 }.joined(separator: " · "))
-                                .font(.system(size: 16))
-                                .foregroundStyle(NL.textTertiary)
-                                .lineLimit(1)
+                            HStack(spacing: 8) {
+                                SourceLogo(name: item.sourceName, url: store.logo(for: item), size: 24)
+                                Text(verbatim: [item.sourceName, Formats.stamp(item.published, lang: store.lang)].compactMap { $0 }.joined(separator: " · "))
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(NL.textTertiary)
+                                    .lineLimit(1)
+                            }
                             Text(item.headline(for: store.lang))
                                 .font(.system(size: 22, weight: .semibold, design: .serif))
                                 .foregroundStyle(NL.textPrimary)
@@ -412,11 +415,14 @@ private struct LatestModule: View {
                         HStack(alignment: .top, spacing: 12) {
                             Capsule().fill(NL.country(item.country)).frame(width: 4)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: [item.country, item.sourceName, Formats.stamp(item.published, lang: store.lang)]
-                                    .compactMap { $0 }.joined(separator: " · "))
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(NL.textTertiary)
-                                    .lineLimit(1)
+                                HStack(spacing: 8) {
+                                    SourceLogo(name: item.sourceName, url: store.logo(for: item), size: 24)
+                                    Text(verbatim: [item.country, item.sourceName, Formats.stamp(item.published, lang: store.lang)]
+                                        .compactMap { $0 }.joined(separator: " · "))
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundStyle(NL.textTertiary)
+                                        .lineLimit(1)
+                                }
                                 Text(item.headline(for: store.lang))
                                     .font(.system(size: 22, weight: .semibold, design: .serif))
                                     .foregroundStyle(NL.textPrimary)
