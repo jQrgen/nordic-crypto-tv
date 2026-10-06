@@ -11,6 +11,9 @@ enum APIConfig {
     ]
     static let site = URL(string: "https://cryptonordic.no/")!
     static let subscribe = URL(string: "https://cryptonordic.substack.com/subscribe")!
+    /// The community chat.
+    static let telegram = URL(string: "https://t.me/nordiccryptochat")!
+    static let telegramHandle = "@nordiccryptochat"
 
     /// Files the API links on GitHub Pages, fetched from the gh-pages branch
     /// instead while the Pages site redirects to a domain without HTTPS.

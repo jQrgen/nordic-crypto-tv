@@ -9,6 +9,13 @@ struct TodayView: View {
     var body: some View {
         content
             .background(NLBackground())
+            #if !os(tvOS)
+            .toolbar {
+                ToolbarItem {
+                    Link(destination: APIConfig.telegram) { Label("Chat on Telegram", systemImage: "paperplane") }
+                }
+            }
+            #endif
             #if os(iOS)
             .toolbar {
                 ToolbarItem {
@@ -167,6 +174,7 @@ private struct CompactToday: View {
             }
 
             MoreNewsSections(columns: 1)
+            TelegramCard()
             Disclaimer()
         }
     }
@@ -196,6 +204,7 @@ private struct WideToday: View {
                     if let issue = store.issues.first {
                         NewsletterCard(issue: issue, height: 210)
                     }
+                    TelegramCard()
                 }
                 .frame(width: max(300, width / 3 - 40))
             }
@@ -234,6 +243,39 @@ private struct MoreNewsSections: View {
                     .background(NL.bg.opacity(0.92))
             }
         }
+    }
+}
+#endif
+
+#if !os(tvOS)
+/// Invitation to the community chat on Telegram.
+struct TelegramCard: View {
+    var body: some View {
+        Link(destination: APIConfig.telegram) {
+            HStack(spacing: 16) {
+                Image(systemName: "paperplane.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white)
+                    .frame(width: 52, height: 52)
+                    .background(Color(hex: 0x229ED9), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Join the Nordic Crypto chat on Telegram")
+                        .font(NLFont.row)
+                        .foregroundStyle(NL.textPrimary)
+                        .multilineTextAlignment(.leading)
+                    Text(verbatim: APIConfig.telegramHandle)
+                        .font(NLFont.caption)
+                        .foregroundStyle(NL.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.right")
+                    .foregroundStyle(NL.textTertiary)
+            }
+            .padding(NLMetrics.cardPadding * 0.75)
+            .nlGlass(cornerRadius: NLMetrics.rowRadius)
+            .contentShape(Rectangle())
+        }
+        .nlCardButton()
     }
 }
 #endif

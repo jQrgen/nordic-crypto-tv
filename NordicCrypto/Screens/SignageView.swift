@@ -148,11 +148,25 @@ private struct DashboardHeader: View {
         HStack(alignment: .center, spacing: 28) {
             Wordmark(size: 40)
             StatusPill(store: store)
+            HStack(spacing: 8) {
+                Image(systemName: "paperplane.fill")
+                    .foregroundStyle(Color(hex: 0x229ED9))
+                Text(verbatim: "Telegram \(APIConfig.telegramHandle)")
+                    .font(NLFont.caption.weight(.semibold))
+                    .foregroundStyle(NL.textPrimary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(NL.hairline, in: Capsule())
+            .fixedSize()
             Text("\(store.news.count) stories · \(store.upcomingEvents.count) upcoming events")
                 .font(NLFont.caption)
                 .foregroundStyle(NL.textTertiary)
-            Spacer()
+                .lineLimit(1)
+                .layoutPriority(-1)
+            Spacer(minLength: 12)
             RadioPill()
+                .fixedSize()
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 HStack(alignment: .firstTextBaseline, spacing: 14) {
                     Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Formats.locale(store.lang))))
@@ -240,10 +254,12 @@ private struct LeadModule: View {
                             PageDots(count: top.count, index: index)
                         }
                         Text(item.headline(for: store.lang))
-                            .font(.system(size: 54, weight: .bold, design: .serif))
+                            .font(.system(size: 52, weight: .bold, design: .serif))
                             .foregroundStyle(NL.textPrimary)
-                            .lineLimit(3)
+                            .lineLimit(2)
                             .minimumScaleFactor(0.8)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .layoutPriority(1)
                         if let original = item.originalHeadline(for: store.lang) {
                             Text(original)
                                 .font(.system(size: 25)).italic()
@@ -252,9 +268,9 @@ private struct LeadModule: View {
                         }
                         if let summary = item.summary(for: store.lang) {
                             Text(summary)
-                                .font(.system(size: 28))
+                                .font(.system(size: 27))
                                 .foregroundStyle(NL.textPrimary.opacity(0.88))
-                                .lineLimit(3)
+                                .lineLimit(2)
                         }
                         HStack(spacing: 8) {
                             ForEach(item.topics.prefix(3), id: \.self) { TopicChip(topic: $0) }
