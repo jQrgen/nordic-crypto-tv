@@ -126,6 +126,7 @@ def replace_screenshots(asc, loc_id, device, files):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--only", help="only touch screenshots for this device (e.g. appletv); text is re-sent unchanged")
     ap.add_argument("--screenshots", default=os.path.expanduser("~/Desktop/NordicCrypto-AppStore/screenshots"))
     args = ap.parse_args()
     issuer, key_id = os.environ.get("ASC_ISSUER_ID"), os.environ.get("ASC_KEY_ID")
@@ -148,6 +149,8 @@ def main():
     # One App Store version per platform, each with its text and screenshots.
     versions = asc.get(f"/apps/{app['id']}/appStoreVersions", **{"limit": 50})["data"]
     for platform, devices in PLATFORMS.items():
+        if args.only and args.only not in devices:
+            continue
         editable = [v for v in versions if v["attributes"]["platform"] == platform
                     and v["attributes"]["appStoreState"] in ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")]
         if editable:
@@ -176,6 +179,8 @@ def main():
                 continue
             lang = "en" if locale.startswith("en") else locale
             for device in devices:
+                if args.only and device != args.only:
+                    continue
                 files = sorted(glob.glob(os.path.join(args.screenshots, device, lang, "*.png"))) or \
                     sorted(glob.glob(os.path.join(args.screenshots, device, "en", "*.png")))
                 if files:
