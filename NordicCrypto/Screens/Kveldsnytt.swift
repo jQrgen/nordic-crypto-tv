@@ -2,9 +2,8 @@
 import SwiftUI
 
 /// The "Kveldsnytt" Apple TV page: a broadcast-style front page. A large lead
-/// story with an aurora glow, three cards under it, the agenda and spotlight
-/// on the right, and one card per country along the bottom. Every part keeps
-/// its place and rotates its own content.
+/// story with an aurora glow, cards under it, and the agenda and spotlight
+/// on the right. Every part keeps its place and rotates its own content.
 struct KveldsnyttLayout: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -21,19 +20,17 @@ struct KveldsnyttLayout: View {
                     VStack(alignment: .leading, spacing: 24) {
                         KLead()
                         KCards()
-                            .frame(height: 220)
+                            .frame(height: 240)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     VStack(spacing: 18) {
                         KAgenda()
                         SpotlightModule()
-                            .frame(height: 236)
+                            .frame(height: 300)
                     }
                     .frame(width: 620)
                 }
                 .frame(maxHeight: .infinity)
-                KCountries()
-                    .frame(height: 108)
             }
             .padding(.horizontal, 64)
             .padding(.vertical, 44)
@@ -407,64 +404,4 @@ private struct EventRowK: View {
     }
 }
 
-// MARK: - Countries
-
-/// One card per country with its colour along the top, its count and its
-/// latest headlines, rotating at staggered moments.
-private struct KCountries: View {
-    var body: some View {
-        HStack(spacing: 16) {
-            ForEach(Array(Country.allCases.enumerated()), id: \.element) { i, country in
-                KCountryCard(country: country, offset: Double(i) * 2.2)
-            }
-        }
-    }
-}
-
-private struct KCountryCard: View {
-    let country: Country
-    let offset: Double
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        let items = store.news(in: country)
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(country.name)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(NL.textPrimary)
-                Spacer()
-                Text(items.count, format: .number)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(items.isEmpty ? NL.textTertiary : NL.textPrimary)
-            }
-            if items.isEmpty {
-                Text("Quiet in \(country.name) — no stories this week")
-                    .font(.system(size: 17))
-                    .foregroundStyle(NL.textTertiary)
-                    .lineLimit(1)
-            } else {
-                Rotating(items: items, interval: 11, offset: offset) { item, _ in
-                    HStack(spacing: 8) {
-                        SourceLogo(name: item.sourceName, url: store.logo(for: item), size: 20)
-                        Text(item.headline(for: store.lang))
-                            .font(.system(size: 17))
-                            .foregroundStyle(NL.textSecondary)
-                            .lineLimit(2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(K.panel, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(alignment: .top) {
-            UnevenRoundedRectangle(topLeadingRadius: 16, topTrailingRadius: 16, style: .continuous)
-                .fill(NL.country(country.rawValue))
-                .frame(height: 4)
-        }
-    }
-}
 #endif
