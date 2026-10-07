@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""Draws the tvOS brand assets (layered app icons, Top Shelf images) into
-NordicCryptoTV/Assets.xcassets. Run from the repo root: python3 support/make_brand_assets.py
+"""Draws the "Nordlys" brand assets into NordicCrypto/Assets.xcassets:
+iOS/iPadOS and macOS app icons, the layered Apple TV icons and Top Shelf
+images, and the layered visionOS icon. Run from the repo root:
+python3 support/make_brand_assets.py
 """
 import json
+import math
 import os
-from PIL import Image, ImageDraw, ImageFont
+import shutil
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-ROOT = os.path.join(os.path.dirname(__file__), "..", "NordicCryptoTV", "Assets.xcassets")
-FONT = "/System/Library/Fonts/Menlo.ttc"
-AMBER = (251, 139, 30)
-AMBER_DIM = (110, 60, 12)
-BLACK = (0, 0, 0)
-PANEL = (14, 16, 21)
-RULE = (40, 44, 52)
-COUNTRIES = [("NO", (220, 46, 56)), ("SE", (0, 107, 189)), ("DK", (199, 15, 46)),
-             ("FI", (0, 77, 158)), ("IS", (0, 82, 158))]
-
-
-def font(size, bold=True):
-    return ImageFont.truetype(FONT, size, index=1 if bold else 0)
+ROOT = os.path.join(os.path.dirname(__file__), "..", "NordicCrypto", "Assets.xcassets")
+ROUNDED = "/System/Library/Fonts/SFNSRounded.ttf"
+BG = (7, 11, 20)
+AURORA = (61, 220, 151)
+VIOLET = (139, 124, 246)
+LAKE = (77, 157, 255)
+COUNTRY = [(242, 84, 91), (242, 193, 78), (255, 122, 162), (77, 157, 255), (63, 211, 198)]
+INFO = {"author": "xcode", "version": 1}
 
 
 def write_json(path, data):
@@ -28,80 +27,90 @@ def write_json(path, data):
         f.write("\n")
 
 
-INFO = {"author": "xcode", "version": 1}
-
-
-def back_layer(w, h, chart=True):
-    """Opaque terminal backdrop: grid, a faint chart line, country bars."""
-    img = Image.new("RGB", (w, h), BLACK)
-    d = ImageDraw.Draw(img)
-    step = max(w // 24, 8)
-    for x in range(0, w, step):
-        d.line([(x, 0), (x, h)], fill=(18, 20, 26), width=max(1, w // 800))
-    for y in range(0, h, step):
-        d.line([(0, y), (w, y)], fill=(18, 20, 26), width=max(1, w // 800))
-    pts = []
-    if not chart:
-        return draw_bars(img, d, w, h)
-    for i in range(13):
-        x = int(w * i / 12)
-        y = int(h * (0.72 - 0.05 * ((i * 7) % 5) - 0.025 * i))
-        pts.append((x, y))
-    d.line(pts, fill=AMBER_DIM, width=max(2, w // 160))
-    return draw_bars(img, d, w, h)
-
-
-def draw_bars(img, d, w, h):
-    bar_h = max(4, h // 28)
-    seg = w / len(COUNTRIES)
-    for i, (_, color) in enumerate(COUNTRIES):
-        d.rectangle([int(i * seg), h - bar_h, int((i + 1) * seg), h], fill=color)
+def aurora(w, h, bands=True):
+    """Opaque polar-night backdrop with blurred aurora light."""
+    img = Image.new("RGB", (w, h), BG)
+    glow = Image.new("RGB", (w, h), (0, 0, 0))
+    d = ImageDraw.Draw(glow)
+    s = min(w, h)
+    blobs = [(0.25, 0.30, 0.55, AURORA), (0.72, 0.22, 0.45, VIOLET), (0.55, 0.75, 0.50, LAKE)]
+    for cx, cy, r, color in blobs:
+        rx, ry = r * w * 0.6, r * h * 0.6
+        d.ellipse([cx * w - rx, cy * h - ry, cx * w + rx, cy * h + ry], fill=color)
+    if bands:
+        # Two soft curtains sweeping across, like aurora arcs.
+        for k, color in enumerate((AURORA, VIOLET)):
+            pts = []
+            for i in range(41):
+                x = w * i / 40
+                y = h * (0.42 + 0.12 * k + 0.08 * math.sin(i / 40 * math.pi * 2 + k))
+                pts.append((x, y))
+            d.line(pts, fill=color, width=max(4, int(s * 0.10)))
+    glow = glow.filter(ImageFilter.GaussianBlur(s * 0.16))
+    img = Image.blend(img, glow, 0.62)
     return img
 
 
-def front_layer(w, h, wordmark=True):
-    """Transparent foreground: the amber NC block and the wordmark."""
+def sparkle(w, h, scale=0.42):
+    """Transparent layer with a white four-point sparkle in the centre."""
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    block_h = int(h * (0.42 if wordmark else 0.5))
-    f = font(int(block_h * 0.72))
-    text = "NC"
-    tw = d.textlength(text, font=f)
-    pad = block_h * 0.22
-    bw = int(tw + pad * 2)
-    total_w = bw
-    word_f = font(int(block_h * 0.30))
-    word = "NORDIC CRYPTO"
-    if wordmark:
-        total_w = max(bw, int(d.textlength(word, font=word_f)))
-    x0 = (w - bw) // 2
-    y0 = int(h * (0.18 if wordmark else 0.25))
-    d.rectangle([x0, y0, x0 + bw, y0 + block_h], fill=AMBER + (255,))
-    d.text((x0 + bw / 2, y0 + block_h / 2), text, font=f, fill=BLACK + (255,), anchor="mm")
-    if wordmark:
-        d.text((w / 2, y0 + block_h + block_h * 0.42), word, font=word_f, fill=AMBER + (255,), anchor="mm")
+    cx, cy = w / 2, h / 2
+    r = min(w, h) * scale / 2
+    pts = []
+    for i in range(400):
+        t = i / 400 * 2 * math.pi
+        # Astroid-like star: sharp points, curved sides.
+        x = math.copysign(abs(math.cos(t)) ** 3, math.cos(t))
+        y = math.copysign(abs(math.sin(t)) ** 3, math.sin(t))
+        pts.append((cx + r * x, cy + r * y))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).polygon(pts, fill=(255, 255, 255, 120))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(r * 0.25))
+    img.alpha_composite(shadow)
+    d.polygon(pts, fill=(255, 255, 255, 255))
     return img
+
+
+def icon_flat(size):
+    img = aurora(size, size).convert("RGBA")
+    img.alpha_composite(sparkle(size, size))
+    return img.convert("RGB")
+
+
+def mac_icon(size):
+    """macOS shape: rounded square inset in a transparent canvas."""
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    inner = int(size * 0.805)
+    art = icon_flat(inner).convert("RGBA")
+    mask = Image.new("L", (inner, inner), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, inner - 1, inner - 1], radius=int(inner * 0.225), fill=255)
+    off = (size - inner) // 2
+    shadow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rounded_rectangle([off, off + size * 0.01, off + inner, off + inner + size * 0.01],
+                                            radius=int(inner * 0.225), fill=(0, 0, 0, 110))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(size * 0.012)))
+    canvas.paste(art, (off, off), mask)
+    return canvas
 
 
 def imageset(path, files, idiom="tv"):
-    images = [{"idiom": idiom, "filename": name, "scale": scale} for name, scale in files]
-    write_json(path, {"images": images, "info": INFO})
+    write_json(path, {"images": [{"idiom": idiom, "filename": n, "scale": s} for n, s in files], "info": INFO})
 
 
-def imagestack(path, size_1x, scales):
-    write_json(path, {"info": INFO, "layers": [{"filename": "Front.imagestacklayer"},
-                                               {"filename": "Back.imagestacklayer"}]})
-    for layer, maker in (("Front", lambda w, h: front_layer(w, h, wordmark=False)), ("Back", back_layer)):
+def layered(path, size_1x, scales, idiom="tv"):
+    write_json(path, {"info": INFO, "layers": [{"filename": "Front.imagestacklayer"}, {"filename": "Back.imagestacklayer"}]})
+    for layer, maker in (("Front", lambda w, h: sparkle(w, h, 0.5)), ("Back", lambda w, h: aurora(w, h))):
         lpath = os.path.join(path, f"{layer}.imagestacklayer")
         write_json(lpath, {"info": INFO})
         cpath = os.path.join(lpath, "Content.imageset")
+        os.makedirs(cpath, exist_ok=True)
         files = []
         for s in scales:
-            w, h = size_1x[0] * s, size_1x[1] * s
             name = f"{layer.lower()}@{s}x.png"
-            maker(w, h).save(os.path.join(cpath if os.makedirs(cpath, exist_ok=True) is None else cpath, name))
+            maker(size_1x[0] * s, size_1x[1] * s).save(os.path.join(cpath, name))
             files.append((name, f"{s}x"))
-        imageset(cpath, files)
+        imageset(cpath, files, idiom)
 
 
 def top_shelf(path, size_1x, scales):
@@ -109,33 +118,69 @@ def top_shelf(path, size_1x, scales):
     files = []
     for s in scales:
         w, h = size_1x[0] * s, size_1x[1] * s
-        img = back_layer(w, h, chart=False).convert("RGBA")
-        front = front_layer(h, h)  # square wordmark block, centred on the left third
-        img.alpha_composite(front, (int(w * 0.08), 0))
+        img = aurora(w, h).convert("RGBA")
+        glyph = int(h * 0.36)
+        tile = icon_flat(glyph).convert("RGBA")
+        mask = Image.new("L", (glyph, glyph), 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, glyph - 1, glyph - 1], radius=int(glyph * 0.22), fill=255)
+        x0, y0 = int(w * 0.08), int(h * 0.30)
+        img.paste(tile, (x0, y0), mask)
         d = ImageDraw.Draw(img)
-        f = font(int(h * 0.075))
-        lines = ["NEWS · EVENTS · NEWSLETTER", "NO  SE  DK  FI  IS"]
-        for i, line in enumerate(lines):
-            d.text((int(w * 0.08) + h + int(w * 0.04), int(h * (0.38 + i * 0.14))), line, font=f,
-                   fill=(AMBER if i == 0 else (230, 230, 230)) + (255,))
+        d.text((x0 + glyph + h * 0.08, y0 + glyph * 0.08), "Nordic Crypto", font=ImageFont.truetype(ROUNDED, int(h * 0.15)),
+               fill=(242, 245, 250, 255))
+        d.text((x0 + glyph + h * 0.08, y0 + glyph * 0.62), "Norway · Sweden · Denmark · Finland · Iceland",
+               font=ImageFont.truetype(ROUNDED, int(h * 0.055)), fill=(163, 173, 194, 255))
         name = f"topshelf@{s}x.png"
         img.convert("RGB").save(os.path.join(path, name))
         files.append((name, f"{s}x"))
     imageset(path, files)
 
 
-def color(path, rgb):
-    r, g, b = (f"{c / 255:.3f}" for c in rgb)
-    write_json(path, {"colors": [{"idiom": "universal",
-                                  "color": {"color-space": "srgb",
-                                            "components": {"red": r, "green": g, "blue": b, "alpha": "1.000"}}}],
-                      "info": INFO})
+def color(path, light, dark=None):
+    def comp(rgb):
+        r, g, b = (f"{c / 255:.3f}" for c in rgb)
+        return {"color-space": "srgb", "components": {"red": r, "green": g, "blue": b, "alpha": "1.000"}}
+    colors = [{"idiom": "universal", "color": comp(light)}]
+    if dark:
+        colors.append({"idiom": "universal", "appearances": [{"appearance": "luminosity", "value": "dark"}], "color": comp(dark)})
+    write_json(path, {"colors": colors, "info": INFO})
 
 
 def main():
+    if os.path.isdir(ROOT):
+        shutil.rmtree(ROOT)
     write_json(ROOT, {"info": INFO})
-    color(os.path.join(ROOT, "AccentColor.colorset"), AMBER)
-    color(os.path.join(ROOT, "LaunchBackground.colorset"), BLACK)
+    color(os.path.join(ROOT, "AccentColor.colorset"), (14, 143, 99), AURORA)
+
+    # iOS / iPadOS: one 1024 opaque icon.
+    ios = os.path.join(ROOT, "AppIcon.appiconset")
+    os.makedirs(ios, exist_ok=True)
+    icon_flat(1024).save(os.path.join(ios, "ios-1024.png"))
+    images = [{"idiom": "universal", "platform": "ios", "size": "1024x1024", "filename": "ios-1024.png"}]
+    # macOS: the classic size set.
+    for pt in (16, 32, 128, 256, 512):
+        for scale in (1, 2):
+            px = pt * scale
+            name = f"mac-{pt}@{scale}x.png"
+            mac_icon(px).save(os.path.join(ios, name))
+            images.append({"idiom": "mac", "size": f"{pt}x{pt}", "scale": f"{scale}x", "filename": name})
+    write_json(ios, {"images": images, "info": INFO})
+
+    # visionOS: three-layer solid image stack, 1024 square.
+    vision = os.path.join(ROOT, "AppIcon-Vision.solidimagestack")
+    write_json(vision, {"info": INFO, "layers": [{"filename": "Front.solidimagestacklayer"},
+                                                 {"filename": "Middle.solidimagestacklayer"},
+                                                 {"filename": "Back.solidimagestacklayer"}]})
+    for layer, img in (("Front", sparkle(1024, 1024, 0.5)), ("Middle", Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))),
+                       ("Back", aurora(1024, 1024))):
+        lpath = os.path.join(vision, f"{layer}.solidimagestacklayer")
+        write_json(lpath, {"info": INFO})
+        cpath = os.path.join(lpath, "Content.imageset")
+        os.makedirs(cpath, exist_ok=True)
+        img.save(os.path.join(cpath, f"{layer.lower()}.png"))
+        write_json(cpath, {"images": [{"idiom": "vision", "filename": f"{layer.lower()}.png", "scale": "2x"}], "info": INFO})
+
+    # Apple TV.
     brand = os.path.join(ROOT, "App Icon & Top Shelf Image.brandassets")
     write_json(brand, {"assets": [
         {"filename": "App Icon - App Store.imagestack", "idiom": "tv", "role": "primary-app-icon", "size": "1280x768"},
@@ -143,8 +188,8 @@ def main():
         {"filename": "Top Shelf Image Wide.imageset", "idiom": "tv", "role": "top-shelf-image-wide", "size": "2320x720"},
         {"filename": "Top Shelf Image.imageset", "idiom": "tv", "role": "top-shelf-image", "size": "1920x720"},
     ], "info": INFO})
-    imagestack(os.path.join(brand, "App Icon.imagestack"), (400, 240), [1, 2])
-    imagestack(os.path.join(brand, "App Icon - App Store.imagestack"), (1280, 768), [1])
+    layered(os.path.join(brand, "App Icon.imagestack"), (400, 240), [1, 2])
+    layered(os.path.join(brand, "App Icon - App Store.imagestack"), (1280, 768), [1])
     top_shelf(os.path.join(brand, "Top Shelf Image.imageset"), (1920, 720), [1, 2])
     top_shelf(os.path.join(brand, "Top Shelf Image Wide.imageset"), (2320, 720), [1, 2])
 

@@ -1,0 +1,33 @@
+Nordic Crypto mengumpulkan berita bitcoin, kripto, dan blockchain dari Norwegia, Swedia, Denmark, Finlandia, dan Islandia di satu tempat yang tenang.
+
+Setiap berita dilengkapi ringkasan singkat yang ditulis oleh tim Nordic Crypto, beserta tautan ke sumber aslinya. Setiap draf diperiksa sebelum diterbitkan.
+
+Harap diperhatikan: antarmuka aplikasi tersedia dalam bahasa Indonesia, tetapi ringkasan beritanya ditulis dalam bahasa Inggris dan bahasa-bahasa Nordik (Norwegia, Swedia, Denmark, Finlandia, dan Islandia).
+
+HARI INI
+• Tiga berita terbesar lebih dulu, lalu sisanya per hari
+• Meetup dan konferensi mendatang langsung di halaman depan
+• Ilustrasi berita dibuat dari warna negara dan topiknya
+
+NEGARA
+• Satu tampilan per negara, dengan waktu setempat dan berita terbaru
+• Regulasi, MiCA, pajak, kejahatan, bisnis, dan lainnya, ditandai per topik
+
+ACARA
+• Meetup, konferensi, dan diskusi di seluruh kawasan Nordik, diurutkan menurut tanggal
+• Label jelas untuk acara gratis, berbayar, bersponsor, dan daring
+
+BULETIN
+• Edisi mingguan Nordic Crypto untuk dibaca di aplikasi
+• Video berita untuk setiap edisi
+
+DI SETIAP LAYAR
+• iPhone dan iPad, dengan Teks Dinamis dan VoiceOver
+• Mac, di jendelanya sendiri dengan bar samping
+• Apple Vision Pro, dengan video berita di jendela tersendiri
+• Apple TV sebagai layar informasi: berita utama, acara, satu baris per negara, dan judul terbaru, masing-masing berganti sendiri, dengan Radio Norge di latar belakang. Tombol Putar/Jeda pada remote menyalakan atau mematikan radio.
+
+PRIVASI SEJAK AWAL
+Tanpa akun, tanpa pelacakan, tanpa iklan. Aplikasi hanya membaca data berita publik.
+
+Judul berita adalah milik penerbitnya. Nordic Crypto adalah layanan berita, bukan saran investasi.

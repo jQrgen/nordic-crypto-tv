@@ -1,6 +1,6 @@
-# Nordic Crypto for Apple TV
+# Nordic Crypto
 
-A terminal-style (Bloomberg-like) news app for tvOS 18+, built on the
+A Nordic crypto news app for Apple TV, iPhone, iPad, Mac and Apple Vision Pro, built on the
 [Nordic Crypto data API v1](https://github.com/jQrgen/nordic-crypto) (`/api/v1/`).
 
 - **F1 Top news**: lead story, the latest list, topic board, upcoming events, more headlines

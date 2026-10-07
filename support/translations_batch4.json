@@ -1,0 +1,24 @@
+{
+  "%lld going": {
+    "nb": "%lld påmeldt",
+    "nn": "%lld påmelde",
+    "sv": "%lld anmälda",
+    "da": "%lld tilmeldte",
+    "fi": "Ilmoittautuneita: %lld",
+    "is": "Skráðir: %lld",
+    "zh-Hans": "%lld 人参加",
+    "hi": "%lld लोग आ रहे हैं",
+    "es": "%lld asistentes",
+    "fr": "%lld participants",
+    "ar": "المشاركون: %lld",
+    "bn": "%lld জন যাচ্ছেন",
+    "pt": "%lld confirmados",
+    "ru": "Участников: %lld",
+    "ur": "%lld افراد شریک",
+    "id": "%lld akan hadir",
+    "de": "%lld Zusagen",
+    "ja": "%lld 人が参加予定",
+    "sw": "Watakaohudhuria: %lld",
+    "mr": "%lld जण येणार"
+  }
+}
