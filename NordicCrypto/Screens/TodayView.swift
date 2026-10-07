@@ -248,9 +248,20 @@ private struct MoreNewsSections: View {
 #endif
 
 #if !os(tvOS)
-/// Invitation to the community chat on Telegram.
+/// Invitation to the community chat on Telegram, and the source code link.
 struct TelegramCard: View {
     var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            telegram
+            Link(destination: APIConfig.sourceCode) {
+                Label("Open source on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                    .font(NLFont.caption.weight(.semibold))
+                    .foregroundStyle(NL.textSecondary)
+            }
+        }
+    }
+
+    private var telegram: some View {
         Link(destination: APIConfig.telegram) {
             HStack(spacing: 16) {
                 Image(systemName: "paperplane.fill")
