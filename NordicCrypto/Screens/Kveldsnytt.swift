@@ -25,8 +25,8 @@ struct KveldsnyttLayout: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     VStack(spacing: 18) {
                         KAgenda()
-                        SpotlightModule()
-                            .frame(height: 300)
+                        SpotlightModule(compact: true)
+                            .frame(height: 132)
                     }
                     .frame(width: 620)
                 }
@@ -270,8 +270,8 @@ private struct KAgenda: View {
                 Rotating(items: Array(events.indices), interval: 15, offset: 7) { i, _ in
                     VStack(alignment: .leading, spacing: 6) {
                         FeaturedEventK(event: events[i], isNext: i == 0)
-                        ForEach(1..<min(5, events.count), id: \.self) { k in
-                            EventRowK(event: events[(i + k) % events.count], last: k == min(5, events.count) - 1)
+                        ForEach(1..<min(7, events.count), id: \.self) { k in
+                            EventRowK(event: events[(i + k) % events.count], last: k == min(7, events.count) - 1)
                         }
                     }
                 }
