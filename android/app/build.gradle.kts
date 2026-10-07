@@ -14,7 +14,8 @@ android {
         applicationId = "no.cryptonordic.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
+        // CI sets VERSION_CODE from the run number so every build installs over the last one.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.1.0"
     }
 
