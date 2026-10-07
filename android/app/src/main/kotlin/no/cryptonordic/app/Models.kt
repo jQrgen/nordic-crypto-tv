@@ -1,0 +1,139 @@
+package no.cryptonordic.app
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
+import java.time.LocalDate
+
+// Types for the Nordic Crypto data API v1. New fields may appear at any time,
+// so everything but ids and titles is optional and unknown keys are ignored.
+
+@Serializable
+data class NewsFeed(val items: List<NewsItem> = emptyList(), val updated: String? = null)
+
+@Serializable
+data class NewsItem(
+    val id: String,
+    val title: String,
+    val url: String? = null,
+    @SerialName("title_en") val titleEn: String? = null,
+    val source: String? = null,
+    @SerialName("source_name") val sourceName: String? = null,
+    @SerialName("source_logo_url") val sourceLogoUrl: String? = null,
+    val country: String? = null,
+    @SerialName("language_code") val languageCode: String? = null,
+    val published: String? = null,
+    val topics: List<String> = emptyList(),
+    val summary: String? = null,
+    @SerialName("summary_i18n") val summaryI18n: Map<String, String> = emptyMap(),
+    val paywall: Boolean? = false,
+) {
+    val publishedAt: OffsetDateTime? get() = published?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }
+
+    /** The reader's language when the source is in it, else the English title. */
+    fun headline(lang: String): String =
+        if (languageCode != null && Lang.sameFamily(languageCode, lang)) title else titleEn ?: title
+
+    fun originalHeadline(lang: String): String? = headline(lang).let { if (it == title) null else title }
+    fun summary(lang: String): String? = summaryI18n[lang] ?: summary
+}
+
+@Serializable
+data class EventsFeed(val events: List<EventItem> = emptyList())
+
+@Serializable
+data class EventItem(
+    val id: String,
+    val title: String,
+    val start: String? = null,
+    val end: String? = null,
+    val place: String? = null,
+    val city: String? = null,
+    val country: String? = null,
+    val online: Boolean? = false,
+    val organiser: String? = null,
+    val url: String? = null,
+    val paid: Boolean? = null,
+    val sponsored: String? = null,
+    val note: String? = null,
+    @SerialName("note_i18n") val noteI18n: Map<String, String> = emptyMap(),
+    val past: Boolean? = false,
+    val going: Int? = null,
+) {
+    val startAt: OffsetDateTime? get() = start?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }
+    val endAt: OffsetDateTime? get() = end?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }
+}
+
+@Serializable
+data class NewslettersFeed(val issues: List<NewsletterIssue> = emptyList())
+
+@Serializable
+data class NewsletterEnvelope(val item: NewsletterIssue)
+
+@Serializable
+data class NewsletterIssue(
+    val id: String,
+    val title: String,
+    val number: Int? = null,
+    val date: String? = null,
+    val subtitle: String? = null,
+    @SerialName("title_i18n") val titleI18n: Map<String, String> = emptyMap(),
+    @SerialName("subtitle_i18n") val subtitleI18n: Map<String, String> = emptyMap(),
+    @SerialName("html_url") val htmlUrl: String? = null,
+    val text: String? = null,
+    @SerialName("text_i18n") val textI18n: Map<String, String> = emptyMap(),
+) {
+    fun title(lang: String) = titleI18n[lang] ?: title
+    fun subtitle(lang: String) = subtitleI18n[lang] ?: subtitle
+    fun text(lang: String) = textI18n[lang] ?: text
+    val day: LocalDate? get() = date?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+}
+
+@Serializable
+data class OrgChartFeed(val entities: List<OrgEntity> = emptyList())
+
+@Serializable
+data class OrgEntity(
+    val id: String,
+    val name: String,
+    val type: String? = null,
+    val sector: String? = null,
+    val country: String? = null,
+    val description: String? = null,
+    val role: String? = null,
+    val org: String? = null,
+    val group: String? = null,
+    val logo: CreditedImage? = null,
+    val image: CreditedImage? = null,
+) {
+    val isPerson get() = type == "person"
+}
+
+@Serializable
+data class CreditedImage(
+    @SerialName("file_url") val fileUrl: String? = null,
+    val author: String? = null,
+    val license: String? = null,
+    val credit: String? = null,
+) {
+    /** Android cannot decode SVG with BitmapFactory; those fall back to a monogram. */
+    val displayableUrl: String? get() = fileUrl?.takeUnless { it.lowercase().endsWith(".svg") }
+    val creditLine: String? get() = listOfNotNull(author, license, credit).filter { it.isNotBlank() }
+        .joinToString(" · ").ifBlank { null }
+}
+
+@Serializable
+data class SourcesFeed(val sources: List<Source> = emptyList()) {
+    @Serializable
+    data class Source(val id: String, val name: String? = null, @SerialName("logo_url") val logoUrl: String? = null)
+}
+
+enum class Country(val code: String, val englishName: String) {
+    NO("NO", "Norway"), SE("SE", "Sweden"), DK("DK", "Denmark"), FI("FI", "Finland"), IS("IS", "Iceland");
+
+    val localName: String get() = Lang.tr(englishName)
+
+    companion object {
+        fun of(code: String?) = entries.firstOrNull { it.code == code }
+    }
+}
