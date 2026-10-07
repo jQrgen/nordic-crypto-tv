@@ -38,3 +38,9 @@ Screenshots: `support/screenshots.sh <sim-id> <path/to/Nordic Crypto.app> <out-d
 3. Create the app in App Store Connect: privacy policy URL, privacy label "Data Not Collected", category News,
    age rating, description and keywords in the 7 languages, 1920x1080 screenshots.
 4. Product > Archive in Xcode, then Distribute App > App Store Connect, TestFlight on a real Apple TV, then submit.
+
+## Licence and contributing
+MIT, see [LICENSE](LICENSE). Issues and pull requests are welcome. The news data comes from the
+[Nordic Crypto API](https://github.com/jQrgen/nordic-crypto) (also MIT); headlines belong to their
+publishers. Radio Norge is a third-party stream and is not covered by this licence. Signing keys,
+App Store Connect keys and Play upload keys are never part of this repository.
