@@ -1,0 +1,59 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", "NordicCrypto/Localizable.xcstrings", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=nordiccrypto\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/release.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
+
+      - name: Build
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          cp ../NordicCrypto/Localizable.xcstrings app/src/main/assets/Localizable.xcstrings
+          ./gradlew --no-daemon :app:assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/nordic-crypto.apk"
+
+      - name: Publish to the android-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Latest Android build from ${GITHUB_SHA::7} (build ${{ github.run_number }}). Phone, tablet and Android TV. Allow installs from your browser, then open the APK."
+          git tag -f android-latest "$GITHUB_SHA"
+          git push -f origin refs/tags/android-latest
+          gh release view android-latest >/dev/null 2>&1 || \
+            gh release create android-latest --title "Android (latest build)" --notes "$notes" --prerelease --verify-tag
+          gh release edit android-latest --notes "$notes"
+          gh release upload android-latest "$RUNNER_TEMP/nordic-crypto.apk" --clobber

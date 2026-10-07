@@ -30,7 +30,13 @@ Not investment advice. Headlines belong to their publishers.
 
 ## Try it
 
+[![Join the TestFlight beta](https://img.shields.io/badge/TestFlight-iPhone%20·%20iPad%20·%20Mac%20·%20Vision%20Pro%20·%20Apple%20TV-0D96F6?style=for-the-badge&logo=apple&logoColor=white)](https://testflight.apple.com/join/nQ2fpjZn)
+[![Download the Android APK](https://img.shields.io/badge/Download%20APK-Android%20·%20Android%20TV-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/jQrgen/nordic-crypto-tv/releases/download/android-latest/nordic-crypto.apk)
+
 - **TestFlight (iPhone, iPad, Mac, Vision Pro, Apple TV):** https://testflight.apple.com/join/nQ2fpjZn
+- **Android APK (phone, tablet, Android TV):** the [latest build](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest)
+  from CI, updated on every change. Open it on the device and allow installs from your browser. On
+  Android TV, install it with a file manager or `adb install nordic-crypto.apk`.
 - **Community:** [@nordiccryptochat](https://t.me/nordiccryptochat) on Telegram
 - **Website and API:** [nordiccrypto.no](https://nordiccrypto.no)
 
@@ -80,7 +86,9 @@ cd android
 ./gradlew :app:assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
 ```
 The Android app reads the same `Localizable.xcstrings`, so every platform says the same thing.
-Release builds are signed with an upload key from `android/keystore.properties` (not in the repo).
+Release builds are signed with the key named in `android/keystore.properties` (not in the repo).
+The [Android APK workflow](.github/workflows/android.yml) builds a signed APK on every push to
+`main` and publishes it to the `android-latest` release.
 
 ### Data
 The apps try `https://nordiccrypto.no/api/v1/` first, then the older addresses. The last good
