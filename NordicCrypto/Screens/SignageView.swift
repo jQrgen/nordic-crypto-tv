@@ -17,7 +17,7 @@ struct SignageView: View {
                 LeadModule()
                     .frame(maxWidth: .infinity)
                 EventsModule()
-                    .frame(width: 640)
+                    .frame(width: 800)
             }
             .frame(height: 430)
             CountriesModule()
@@ -299,41 +299,119 @@ private struct LeadModule: View {
     }
 }
 
-/// Upcoming events, five per page.
+/// Upcoming events: one featured with its details and a QR code to the
+/// event page, then the next four. The featured event moves on every 15 s.
 private struct EventsModule: View {
     @Environment(FeedStore.self) private var store
 
     var body: some View {
-        let pages = store.upcomingEvents.chunked(5)
-        Rotating(items: pages, interval: 20, offset: 7) { page, index in
-            VStack(alignment: .leading, spacing: 8) {
-                ModuleHeader(title: "Coming up", count: store.upcomingEvents.count, pages: pages.count, page: index)
-                ForEach(Array(page.enumerated()), id: \.offset) { _, event in
-                    HStack(alignment: .center, spacing: 16) {
-                        CompactDate(date: event.start, country: event.country, lang: store.lang)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(event.title)
-                                .font(.system(size: 25, weight: .semibold, design: .serif))
-                                .foregroundStyle(NL.textPrimary)
-                                .lineLimit(1)
-                            Text(verbatim: [event.online ? String(localized: "Online") : event.city,
-                                            Formats.time(event.start, lang: store.lang), event.organiser]
-                                .compactMap { $0 }.joined(separator: " · "))
-                                .font(.system(size: 18))
-                                .foregroundStyle(NL.textTertiary)
-                                .lineLimit(1)
-                        }
-                        Spacer(minLength: 0)
-                        CountryChip(code: event.country)
-                    }
+        let events = store.upcomingEvents
+        let indices = Array(events.indices)
+        Rotating(items: indices, interval: 15, offset: 7) { i, _ in
+            VStack(alignment: .leading, spacing: 10) {
+                ModuleHeader(title: "Coming up", count: events.count, pages: min(events.count, 12), page: i % 12)
+                FeaturedEvent(event: events[i], isNext: i == 0)
+                ForEach(1..<min(5, events.count), id: \.self) { k in
+                    EventLine(event: events[(i + k) % events.count])
                 }
             }
         }
         .module()
         .overlay {
-            if store.upcomingEvents.isEmpty {
+            if events.isEmpty {
                 Text("No upcoming events").font(NLFont.body).foregroundStyle(NL.textTertiary)
             }
+        }
+    }
+}
+
+private struct FeaturedEvent: View {
+    let event: EventItem
+    let isNext: Bool
+    @Environment(FeedStore.self) private var store
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 18) {
+            DateTile(date: event.start, country: event.country, lang: store.lang)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 10) {
+                    Text(timeRange)
+                        .font(.system(size: 19, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(NL.textSecondary)
+                    if isNext {
+                        Text("Next")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(NL.bg)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 2)
+                            .background(NL.accent, in: Capsule())
+                    }
+                    CountryChip(code: event.country)
+                    EntryBadge(event: event)
+                }
+                Text(event.title)
+                    .font(.system(size: 30, weight: .bold, design: .serif))
+                    .foregroundStyle(NL.textPrimary)
+                    .lineLimit(2)
+                Text(verbatim: [event.online ? String(localized: "Online") : (event.place ?? event.city), event.organiser]
+                    .compactMap { $0 }.joined(separator: " · "))
+                    .font(.system(size: 18))
+                    .foregroundStyle(NL.textTertiary)
+                    .lineLimit(2)
+            }
+            Spacer(minLength: 0)
+            if let url = event.url {
+                VStack(spacing: 4) {
+                    QRCodeImage(url: url)
+                        .frame(width: 104, height: 104)
+                        .padding(8)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    Text(verbatim: url.host() ?? "")
+                        .font(.system(size: 13))
+                        .foregroundStyle(NL.textTertiary)
+                        .lineLimit(1)
+                }
+                .frame(width: 130)
+                .accessibilityHidden(true)
+            }
+        }
+        .padding(16)
+        .background(NL.country(event.country).opacity(0.10), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var timeRange: String {
+        let day = Formats.day(event.start, lang: store.lang)
+        let start = Formats.time(event.start, lang: store.lang)
+        guard let end = event.end, let begin = event.start, Calendar.current.isDate(begin, inSameDayAs: end) else {
+            return "\(day) · \(start)"
+        }
+        return "\(day) · \(start)–\(Formats.time(end, lang: store.lang))"
+    }
+}
+
+private struct EventLine: View {
+    let event: EventItem
+    @Environment(FeedStore.self) private var store
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            CompactDate(date: event.start, country: event.country, lang: store.lang)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(event.title)
+                    .font(.system(size: 22, weight: .semibold, design: .serif))
+                    .foregroundStyle(NL.textPrimary)
+                    .lineLimit(1)
+                Text(verbatim: [event.online ? String(localized: "Online") : event.city,
+                                Formats.time(event.start, lang: store.lang), event.organiser]
+                    .compactMap { $0 }.joined(separator: " · "))
+                    .font(.system(size: 16))
+                    .foregroundStyle(NL.textTertiary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            EntryBadge(event: event)
+            CountryChip(code: event.country)
         }
     }
 }
@@ -346,14 +424,14 @@ private struct CompactDate: View {
     var body: some View {
         VStack(spacing: -2) {
             Text(date.map { Formats.dayNumber($0, lang: lang) } ?? "–")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundStyle(NL.textPrimary)
             Text(date.map { $0.formatted(.dateTime.month(.abbreviated).locale(Formats.locale(lang))) } ?? "")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .textCase(.uppercase)
                 .foregroundStyle(NL.country(country))
         }
-        .frame(width: 62, height: 56)
+        .frame(width: 58, height: 50)
         .background(NL.country(country).opacity(0.15), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
