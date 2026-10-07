@@ -121,9 +121,12 @@ struct EventItem: Decodable, Identifiable, Hashable {
     var note: String?
     var noteI18n: [String: String]
     var past: Bool
+    /// People signed up (Meetup RSVPs), when the API knows.
+    var going: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, title, start, end, place, city, country, online, organiser, url, paid, sponsored, note, past
+        case going
         case titleOriginal = "title_original", noteI18n = "note_i18n"
     }
 
@@ -150,6 +153,7 @@ struct EventItem: Decodable, Identifiable, Hashable {
         note = try c.decodeIfPresent(String.self, forKey: .note)
         noteI18n = (try? c.decodeIfPresent([String: String].self, forKey: .noteI18n)) ?? [:]
         past = (try? c.decodeIfPresent(Bool.self, forKey: .past)) ?? false
+        going = try? c.decodeIfPresent(Int.self, forKey: .going)
     }
 
     func note(for lang: String) -> String? {

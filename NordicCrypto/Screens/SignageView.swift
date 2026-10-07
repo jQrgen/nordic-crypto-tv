@@ -1,9 +1,9 @@
 #if os(tvOS)
 import SwiftUI
 
-/// Apple TV runs as an information screen: one dashboard whose modules stay
-/// in place while each one rotates its own content, so the viewer never loses
-/// context. Nothing is navigable; the remote only switches the radio
+/// Apple TV runs as an information screen ("Kveldsnytt" design): one page
+/// whose parts stay in place while each rotates its own content, so the
+/// viewer never loses context. Nothing is navigable; the remote only switches the radio
 /// (Play/Pause or a click).
 struct SignageView: View {
     @Environment(FeedStore.self) private var store
@@ -11,33 +11,9 @@ struct SignageView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        VStack(spacing: 20) {
-            DashboardHeader()
-            HStack(alignment: .top, spacing: 22) {
-                LeadModule()
-                    .frame(maxWidth: .infinity)
-                EventsModule()
-                    .frame(width: 800)
-            }
-            .frame(height: 430)
-            CountriesModule()
-                .frame(height: 160)
-            HStack(alignment: .top, spacing: 22) {
-                LatestModule()
-                    .frame(maxWidth: .infinity)
-                SpotlightModule()
-                    .frame(width: 600)
-                NewsletterModule()
-                    .frame(width: 430)
-            }
-            .frame(maxHeight: .infinity)
-            DashboardFooter()
-        }
-        .padding(.horizontal, 56)
-        .padding(.vertical, 30)
-        .frame(width: 1920, height: 1080)
-        .background(NLBackground())
-        .ignoresSafeArea()
+        KveldsnyttLayout()
+            .frame(width: 1920, height: 1080)
+            .ignoresSafeArea()
         // One invisible focus target, so the remote's buttons reach us.
         .focusable()
         .focusEffectDisabled()
@@ -53,7 +29,7 @@ struct SignageView: View {
 /// Shows one page of `items` at a time and moves on every `interval`
 /// seconds. Stateless: the page comes from the clock, so modules with
 /// different offsets change at different moments.
-private struct Rotating<Item, Content: View>: View {
+struct Rotating<Item, Content: View>: View {
     let items: [Item]
     var interval: Double
     var offset: Double = 0
@@ -87,7 +63,7 @@ private struct Rotating<Item, Content: View>: View {
 }
 
 /// Page marker for a rotating module.
-private struct PageDots: View {
+struct PageDots: View {
     let count: Int
     let index: Int
 
@@ -129,7 +105,7 @@ private struct ModuleHeader: View {
 }
 
 extension View {
-    fileprivate func module(padding: CGFloat = 20) -> some View {
+    func module(padding: CGFloat = 20) -> some View {
         self
             .padding(padding)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -139,51 +115,8 @@ extension View {
     }
 }
 
-// MARK: - Header and footer
-
-private struct DashboardHeader: View {
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 28) {
-            Wordmark(size: 40)
-            StatusPill(store: store)
-            HStack(spacing: 8) {
-                Image(systemName: "paperplane.fill")
-                    .foregroundStyle(Color(hex: 0x229ED9))
-                Text(verbatim: "Telegram \(APIConfig.telegramHandle)")
-                    .font(NLFont.caption.weight(.semibold))
-                    .foregroundStyle(NL.textPrimary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(NL.hairline, in: Capsule())
-            .fixedSize()
-            Text("\(store.news.count) stories · \(store.upcomingEvents.count) upcoming events")
-                .font(NLFont.caption)
-                .foregroundStyle(NL.textTertiary)
-                .lineLimit(1)
-                .layoutPriority(-1)
-            Spacer(minLength: 12)
-            RadioPill()
-                .fixedSize()
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                HStack(alignment: .firstTextBaseline, spacing: 14) {
-                    Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Formats.locale(store.lang))))
-                        .font(NLFont.kicker)
-                        .foregroundStyle(NL.textSecondary)
-                    Text(Formats.time(context.date, lang: store.lang))
-                        .font(NLFont.rounded(40))
-                        .monospacedDigit()
-                        .foregroundStyle(NL.textPrimary)
-                }
-            }
-        }
-    }
-}
-
 /// Radio status, with the hint that the remote's Play/Pause controls it.
-private struct RadioPill: View {
+struct RadioPill: View {
     @Environment(Radio.self) private var radio
 
     var body: some View {
@@ -209,214 +142,9 @@ private struct RadioPill: View {
     }
 }
 
-private struct DashboardFooter: View {
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        HStack(spacing: 18) {
-            Text("Top topics")
-                .font(NLFont.caption.weight(.semibold))
-                .foregroundStyle(NL.textSecondary)
-            ForEach(store.topTopics.prefix(7), id: \.topic) { entry in
-                HStack(spacing: 6) {
-                    TopicChip(topic: entry.topic)
-                    Text(entry.count, format: .number)
-                        .font(NLFont.caption)
-                        .monospacedDigit()
-                        .foregroundStyle(NL.textTertiary)
-                }
-            }
-            Spacer(minLength: 20)
-            Text("Not investment advice")
-                .font(NLFont.caption)
-                .foregroundStyle(NL.textTertiary)
-                .lineLimit(1)
-        }
-    }
-}
-
 // MARK: - Modules
 
-/// The five newest stories, one at a time, with summary and a QR code.
-private struct LeadModule: View {
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        let top = Array(store.news.prefix(5))
-        Rotating(items: top, interval: 15) { item, index in
-            ZStack(alignment: .bottomLeading) {
-                AuroraArt(story: item, animated: true)
-                HStack(alignment: .bottom, spacing: 28) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
-                            Kicker(item: item, lang: store.lang)
-                            Spacer()
-                            PageDots(count: top.count, index: index)
-                        }
-                        Text(item.headline(for: store.lang))
-                            .font(.system(size: 52, weight: .bold, design: .serif))
-                            .foregroundStyle(NL.textPrimary)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .layoutPriority(1)
-                        if let original = item.originalHeadline(for: store.lang) {
-                            Text(original)
-                                .font(.system(size: 25)).italic()
-                                .foregroundStyle(NL.textSecondary)
-                                .lineLimit(1)
-                        }
-                        if let summary = item.summary(for: store.lang) {
-                            Text(summary)
-                                .font(.system(size: 27))
-                                .foregroundStyle(NL.textPrimary.opacity(0.88))
-                                .lineLimit(2)
-                        }
-                        HStack(spacing: 8) {
-                            ForEach(item.topics.prefix(3), id: \.self) { TopicChip(topic: $0) }
-                        }
-                    }
-                    if let url = item.url {
-                        VStack(spacing: 8) {
-                            QRCodeImage(url: url)
-                                .frame(width: 140, height: 140)
-                                .padding(12)
-                                .background(.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            Text(verbatim: url.host() ?? "")
-                                .font(.system(size: 17))
-                                .foregroundStyle(NL.textTertiary)
-                                .lineLimit(1)
-                        }
-                        .frame(width: 170)
-                        .accessibilityHidden(true)
-                    }
-                }
-                .padding(32)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-    }
-}
-
-/// Upcoming events: one featured with its details and a QR code to the
-/// event page, then the next four. The featured event moves on every 15 s.
-private struct EventsModule: View {
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        let events = store.upcomingEvents
-        let indices = Array(events.indices)
-        Rotating(items: indices, interval: 15, offset: 7) { i, _ in
-            VStack(alignment: .leading, spacing: 10) {
-                ModuleHeader(title: "Coming up", count: events.count, pages: min(events.count, 12), page: i % 12)
-                FeaturedEvent(event: events[i], isNext: i == 0)
-                ForEach(1..<min(5, events.count), id: \.self) { k in
-                    EventLine(event: events[(i + k) % events.count])
-                }
-            }
-        }
-        .module()
-        .overlay {
-            if events.isEmpty {
-                Text("No upcoming events").font(NLFont.body).foregroundStyle(NL.textTertiary)
-            }
-        }
-    }
-}
-
-private struct FeaturedEvent: View {
-    let event: EventItem
-    let isNext: Bool
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 18) {
-            DateTile(date: event.start, country: event.country, lang: store.lang)
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 10) {
-                    Text(timeRange)
-                        .font(.system(size: 19, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(NL.textSecondary)
-                    if isNext {
-                        Text("Next")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(NL.bg)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 2)
-                            .background(NL.accent, in: Capsule())
-                    }
-                    CountryChip(code: event.country)
-                    EntryBadge(event: event)
-                }
-                Text(event.title)
-                    .font(.system(size: 30, weight: .bold, design: .serif))
-                    .foregroundStyle(NL.textPrimary)
-                    .lineLimit(2)
-                Text(verbatim: [event.online ? String(localized: "Online") : (event.place ?? event.city), event.organiser]
-                    .compactMap { $0 }.joined(separator: " · "))
-                    .font(.system(size: 18))
-                    .foregroundStyle(NL.textTertiary)
-                    .lineLimit(2)
-            }
-            Spacer(minLength: 0)
-            if let url = event.url {
-                VStack(spacing: 4) {
-                    QRCodeImage(url: url)
-                        .frame(width: 104, height: 104)
-                        .padding(8)
-                        .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    Text(verbatim: url.host() ?? "")
-                        .font(.system(size: 13))
-                        .foregroundStyle(NL.textTertiary)
-                        .lineLimit(1)
-                }
-                .frame(width: 130)
-                .accessibilityHidden(true)
-            }
-        }
-        .padding(16)
-        .background(NL.country(event.country).opacity(0.10), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-
-    private var timeRange: String {
-        let day = Formats.day(event.start, lang: store.lang)
-        let start = Formats.time(event.start, lang: store.lang)
-        guard let end = event.end, let begin = event.start, Calendar.current.isDate(begin, inSameDayAs: end) else {
-            return "\(day) · \(start)"
-        }
-        return "\(day) · \(start)–\(Formats.time(end, lang: store.lang))"
-    }
-}
-
-private struct EventLine: View {
-    let event: EventItem
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            CompactDate(date: event.start, country: event.country, lang: store.lang)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(event.title)
-                    .font(.system(size: 22, weight: .semibold, design: .serif))
-                    .foregroundStyle(NL.textPrimary)
-                    .lineLimit(1)
-                Text(verbatim: [event.online ? String(localized: "Online") : event.city,
-                                Formats.time(event.start, lang: store.lang), event.organiser]
-                    .compactMap { $0 }.joined(separator: " · "))
-                    .font(.system(size: 16))
-                    .foregroundStyle(NL.textTertiary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 0)
-            EntryBadge(event: event)
-            CountryChip(code: event.country)
-        }
-    }
-}
-
-private struct CompactDate: View {
+struct CompactDate: View {
     let date: Date?
     let country: String?
     let lang: String
@@ -436,107 +164,9 @@ private struct CompactDate: View {
     }
 }
 
-/// One cell per country; each cell rotates through its own headlines at a
-/// different moment, so the row is always moving but never all at once.
-private struct CountriesModule: View {
-    var body: some View {
-        HStack(spacing: 18) {
-            ForEach(Array(Country.allCases.enumerated()), id: \.element) { i, country in
-                CountryCell(country: country, offset: Double(i) * 2.2)
-            }
-        }
-    }
-}
-
-private struct CountryCell: View {
-    let country: Country
-    let offset: Double
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        let items = store.news(in: country)
-        HStack(spacing: 16) {
-            Capsule().fill(NL.country(country.rawValue)).frame(width: 5)
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(country.name)
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(NL.textPrimary)
-                        .lineLimit(1)
-                    Spacer()
-                    Text(items.count, format: .number)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(items.isEmpty ? NL.textTertiary : NL.textPrimary)
-                }
-                if items.isEmpty {
-                    Text("Quiet in \(country.name) — no stories this week")
-                        .font(.system(size: 19))
-                        .foregroundStyle(NL.textTertiary)
-                } else {
-                    Rotating(items: items, interval: 11, offset: offset) { item, _ in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 8) {
-                                SourceLogo(name: item.sourceName, url: store.logo(for: item), size: 24)
-                                Text(verbatim: [item.sourceName, Formats.stamp(item.published, lang: store.lang)].compactMap { $0 }.joined(separator: " · "))
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(NL.textTertiary)
-                                    .lineLimit(1)
-                            }
-                            Text(item.headline(for: store.lang))
-                                .font(.system(size: 22, weight: .semibold, design: .serif))
-                                .foregroundStyle(NL.textPrimary)
-                                .lineLimit(3)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-            }
-        }
-        .module(padding: 20)
-    }
-}
-
-/// Everything after the lead stories, six headlines per page.
-private struct LatestModule: View {
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        let pages = Array(store.news.dropFirst(5)).chunked(4)
-        Rotating(items: pages, interval: 14, offset: 3) { page, index in
-            VStack(alignment: .leading, spacing: 10) {
-                ModuleHeader(title: "Latest", count: max(store.news.count - 5, 0), pages: pages.count, page: index)
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 28), GridItem(.flexible(), spacing: 28)],
-                          alignment: .leading, spacing: 12) {
-                    ForEach(Array(page.enumerated()), id: \.offset) { _, item in
-                        HStack(alignment: .top, spacing: 12) {
-                            Capsule().fill(NL.country(item.country)).frame(width: 4)
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 8) {
-                                    SourceLogo(name: item.sourceName, url: store.logo(for: item), size: 24)
-                                    Text(verbatim: [item.country, item.sourceName, Formats.stamp(item.published, lang: store.lang)]
-                                        .compactMap { $0 }.joined(separator: " · "))
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundStyle(NL.textTertiary)
-                                        .lineLimit(1)
-                                }
-                                Text(item.headline(for: store.lang))
-                                    .font(.system(size: 22, weight: .semibold, design: .serif))
-                                    .foregroundStyle(NL.textPrimary)
-                                    .lineLimit(2)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-            }
-        }
-        .module()
-    }
-}
-
 /// Someone or something from the Nordic crypto world, picked at random:
 /// people, companies, public bodies, courses, research and student groups.
-private struct SpotlightModule: View {
+struct SpotlightModule: View {
     @Environment(FeedStore.self) private var store
 
     var body: some View {
@@ -698,57 +328,10 @@ private struct SpotlightModule: View {
     }
 }
 
-private struct NewsletterModule: View {
-    @Environment(FeedStore.self) private var store
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ModuleHeader(title: "Newsletter")
-            if let latest = store.issues.first {
-                let issue = store.issue(latest.id) ?? latest
-                HStack(alignment: .top, spacing: 20) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(verbatim: "No. \(issue.number ?? 0) · \(issue.date.flatMap(NewsletterCard.parse).map { Formats.day($0, lang: store.lang) } ?? "")")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(NL.accent2)
-                        Text(issue.title(for: store.lang))
-                            .font(.system(size: 22, weight: .semibold, design: .serif))
-                            .foregroundStyle(NL.textPrimary)
-                            .lineLimit(4)
-                        HStack(spacing: 14) {
-                            if let n = issue.stories { Text("\(n) stories") }
-                            if let n = issue.events { Text("\(n) events") }
-                        }
-                        .font(.system(size: 17))
-                        .foregroundStyle(NL.textTertiary)
-                    }
-                    Spacer(minLength: 0)
-                    VStack(spacing: 6) {
-                        QRCodeImage(url: APIConfig.subscribe)
-                            .frame(width: 92, height: 92)
-                            .padding(10)
-                            .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        Text("Scan to subscribe")
-                            .font(.system(size: 15))
-                            .foregroundStyle(NL.textTertiary)
-                    }
-                    .accessibilityHidden(true)
-                }
-            }
-        }
-        .module()
-        .background {
-            AuroraArt.newsletter(seed: "newsletter")
-                .opacity(0.35)
-                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-        }
-    }
-}
-
 extension Array {
     /// Pages of `size`; the last page is topped up from the start so every
     /// page is full and the module never shows a half-empty panel.
-    fileprivate func chunked(_ size: Int) -> [[Element]] {
+    func chunked(_ size: Int) -> [[Element]] {
         guard count > size else { return isEmpty ? [] : [self] }
         let pages = (count + size - 1) / size
         return (0..<pages).map { page in (0..<size).map { self[(page * size + $0) % count] } }
