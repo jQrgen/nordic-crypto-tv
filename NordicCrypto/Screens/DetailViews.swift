@@ -41,10 +41,6 @@ struct StoryDetailView: View {
                     .foregroundStyle(NL.textTertiary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                if let url = item.url {
-                    QRPanel(url: url, caption: "Scan to read the full story")
-                        .padding(.top, 140)
-                }
             }
             .padding(.horizontal, NLMetrics.margin)
             .padding(.top, 160)
@@ -211,9 +207,6 @@ struct EventDetailView: View {
                 .ignoresSafeArea()
             HStack(alignment: .top, spacing: 70) {
                 info.frame(maxWidth: .infinity, alignment: .leading)
-                if let url = event.url {
-                    QRPanel(url: url, caption: "Scan to open the event page").padding(.top, 100)
-                }
             }
             .padding(.horizontal, NLMetrics.margin)
             .padding(.top, 160)

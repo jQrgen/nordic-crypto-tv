@@ -26,7 +26,7 @@ struct KveldsnyttLayout: View {
                     VStack(spacing: 18) {
                         KAgenda()
                         SpotlightModule(compact: true)
-                            .frame(height: 132)
+                            .frame(height: 196)   // room for the description sentence (2 lines)
                     }
                     .frame(width: 620)
                 }
@@ -129,20 +129,6 @@ private struct KLead: View {
                             .frame(maxWidth: 1000, alignment: .leading)
                     }
                     Spacer(minLength: 0)
-                    if let url = item.url {
-                        VStack(spacing: 6) {
-                            QRCodeImage(url: url)
-                                .frame(width: 104, height: 104)
-                                .padding(8)
-                                .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            Text(verbatim: url.host() ?? "")
-                                .font(.system(size: 14))
-                                .foregroundStyle(NL.textTertiary)
-                                .lineLimit(1)
-                        }
-                        .frame(width: 140)
-                        .accessibilityHidden(true)
-                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -218,20 +204,6 @@ private struct NewsletterCardK: View {
                         .lineLimit(4)
                     Spacer(minLength: 0)
                 }
-                Spacer(minLength: 0)
-                VStack(spacing: 4) {
-                    QRCodeImage(url: APIConfig.subscribe)
-                        .frame(width: 84, height: 84)
-                        .padding(7)
-                        .background(.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    Text("Scan to subscribe")
-                        .font(.system(size: 13))
-                        .foregroundStyle(NL.textTertiary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-                .frame(width: 104)
-                .accessibilityHidden(true)
             }
         }
         .padding(.horizontal, 24)
@@ -247,7 +219,7 @@ private struct NewsletterCardK: View {
 
 // MARK: - Agenda
 
-/// Coming up: one featured event with a QR code, then the next four in a
+/// Coming up: one featured event, then the next four in a
 /// ruled list. The featured event moves on every 15 seconds.
 private struct KAgenda: View {
     @Environment(FeedStore.self) private var store
@@ -334,13 +306,6 @@ private struct FeaturedEventK: View {
                 }
             }
             Spacer(minLength: 0)
-            if let url = event.url {
-                QRCodeImage(url: url)
-                    .frame(width: 96, height: 96)
-                    .padding(7)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .accessibilityHidden(true)
-            }
         }
         .padding(22)
         .background(K.raised, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
