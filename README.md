@@ -5,10 +5,10 @@ A Nordic crypto news app for Apple TV, iPhone, iPad, Mac and Apple Vision Pro, b
 
 - **F1 Top news**: lead story, the latest list, topic board, upcoming events, more headlines
 - **F2 Nordics**: one column per country (NO SE DK FI IS) with local clocks
-- **F3 Events**: event table, then detail with a QR code for tickets
+- **F3 Events**: event table, then event detail
 - **F4 Newsletter**: latest issue, newsreel video in the system player, full-text reader
 - Headline ticker, Nordic world clocks, LIVE/OFFLINE status, "not investment advice"
-- Stories open full screen with the Nordic Crypto summary and a QR code to the source (Apple TV has no browser)
+- Stories open full screen with the Nordic Crypto summary and the source name (no QR codes)
 - UI in en, nb, nn, sv, da, fi, is; story summaries use the API's `summary_i18n` for the device language
 - No accounts, no tracking, no data collected (`PrivacyInfo.xcprivacy`)
 

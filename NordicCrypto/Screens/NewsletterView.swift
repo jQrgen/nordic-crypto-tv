@@ -70,7 +70,6 @@ private struct IssueHero: View {
         HStack(alignment: .top, spacing: 48) {
             artwork
             details
-            QRPanel(url: APIConfig.subscribe, caption: "Scan to subscribe")
         }
         #elseif os(iOS)
         VStack(alignment: .leading, spacing: 24) {
