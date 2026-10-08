@@ -15,6 +15,8 @@ enum APIConfig {
     /// The community chat.
     static let telegram = URL(string: "https://t.me/nordiccryptochat")!
     static let telegramHandle = "@nordiccryptochat"
+    /// The apps are open source.
+    static let sourceCode = URL(string: "https://github.com/jQrgen/nordic-crypto-tv")!
 
     /// Files the API links on GitHub Pages, fetched from the gh-pages branch
     /// instead while the Pages site redirects to a domain without HTTPS.

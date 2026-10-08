@@ -27,6 +27,15 @@ struct KveldsnyttLayout: View {
                         KAgenda()
                         SpotlightModule(compact: true)
                             .frame(height: 132)
+                        HStack(spacing: 8) {
+                            Image(systemName: "chevron.left.forwardslash.chevron.right")
+                            Text("Open source on GitHub")
+                            Text(verbatim: "github.com/jQrgen/nordic-crypto-tv")
+                                .foregroundStyle(NL.textSecondary)
+                        }
+                        .font(.system(size: 14))
+                        .foregroundStyle(NL.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     }
                     .frame(width: 620)
                 }
