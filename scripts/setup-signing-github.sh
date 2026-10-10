@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# One-time TestFlight setup for github.com/jQrgen/nordic-crypto-tv (Apple TV),
-# on your PERSONAL Apple Developer account (team YQBXSUUVJD).
+# One-time TestFlight setup for github.com/jQrgen/nordic-crypto-tv (iPhone, iPad,
+# Apple TV, Apple Vision Pro and Mac), on your PERSONAL Apple Developer account
+# (team YQBXSUUVJD).
 #
 #   bash scripts/setup-signing-github.sh \
 #     --key-id KEYID --issuer-id ISSUER --p8 /path/to/AuthKey_KEYID.p8 \
@@ -22,12 +23,18 @@
 #   1. checks the certificates repo is private and on branch main;
 #   2. stores MATCH_PASSWORD (read from your login keychain) as a secret;
 #   3. stores the App Store Connect API key as secrets;
-#   4. runs `fastlane match appstore --platform tvos` (readonly false) for the
-#      bundle id with a temporary keychain: it reuses the distribution
-#      certificate already in the repo and adds a tvOS App Store profile, so CI
-#      can stay readonly. The certificates repo is reached over HTTPS with your
-#      gh login;
-#   5. verifies with a readonly match in a fresh temporary keychain;
+#   4. runs `fastlane match appstore` (readonly false) for the bundle id with a
+#      temporary keychain, once per profile platform, so CI can stay readonly:
+#        --platform ios    iOS App Store profile (Apple issues it for iOS and
+#                          visionOS; match has no visionos platform, and the
+#                          visionOS build is signed with this profile)
+#        --platform tvos   tvOS App Store profile
+#        --platform macos  Mac App Store profile, plus a Mac Installer
+#                          Distribution certificate for the .pkg
+#                          (--additional_cert_types mac_installer_distribution)
+#      Apple Distribution certificate 9A9994RT53 already in the repo is reused.
+#      The certificates repo is reached over HTTPS with your gh login;
+#   5. verifies each with a readonly match in a fresh temporary keychain;
 #   6. creates a new read-only deploy key on the certificates repo for this
 #      repo's CI, stores its private key as the secret MATCH_GIT_PRIVATE_KEY and
 #      checks it can read the repo over SSH the same way the workflow does;
@@ -58,7 +65,7 @@ while [ $# -gt 0 ]; do
     --p8) P8_PATH="$2"; shift 2 ;;
     --team-id) TEAM_ID="$2"; shift 2 ;;
     --bundle-id) BUNDLE_ID="$2"; shift 2 ;;
-    -h|--help) sed -n '2,39p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,47p' "$0"; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -174,11 +181,12 @@ fresh_keychain() {
   security list-keychains -d user -s "$KEYCHAIN" $ORIG_KEYCHAINS
 }
 
-run_match() { # run_match true|false
+run_match() { # run_match true|false PLATFORM [extra match args]
+  local readonly_flag="$1" platform="$2"; shift 2
   ( cd "$TMP" && MATCH_PASSWORD="$MATCH_PASSWORD" bundle exec fastlane run match \
       type:appstore \
-      platform:tvos \
-      readonly:"$1" \
+      platform:"$platform" \
+      readonly:"$readonly_flag" \
       storage_mode:git \
       git_url:"$CERTS_HTTPS" \
       git_branch:"$MATCH_BRANCH" \
@@ -187,19 +195,28 @@ run_match() { # run_match true|false
       api_key_path:"$API_JSON" \
       keychain_name:"$KEYCHAIN" \
       keychain_password:"$KC_PASS" \
-      shallow_clone:true )
+      shallow_clone:true "$@" )
 }
 
-# 4. match appstore for tvOS (reuses the certificate, creates the profile)
-say "4. fastlane match appstore --platform tvos (readonly false) for $BUNDLE_ID, team $TEAM_ID"
-fresh_keychain
-run_match false
+# 4. match appstore per profile platform (reuses the certificate, adds profiles)
+MAC_INSTALLER="additional_cert_types:mac_installer_distribution"
+for platform in ios tvos macos; do
+  say "4. fastlane match appstore --platform $platform (readonly false) for $BUNDLE_ID, team $TEAM_ID"
+  extra=()
+  [ "$platform" = macos ] && extra=("$MAC_INSTALLER")
+  fresh_keychain
+  run_match false "$platform" ${extra[@]+"${extra[@]}"}
+done
 
 # 5. Verify with readonly, as CI runs it
-say "5. Verifying: readonly match in a fresh keychain"
-fresh_keychain
-run_match true
-echo "   readonly match OK"
+for platform in ios tvos macos; do
+  say "5. Verifying $platform: readonly match in a fresh keychain"
+  extra=()
+  [ "$platform" = macos ] && extra=("$MAC_INSTALLER")
+  fresh_keychain
+  run_match true "$platform" ${extra[@]+"${extra[@]}"}
+  echo "   readonly match OK ($platform)"
+done
 unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1
 
 # 6. Read-only deploy key for this repo's CI
@@ -227,6 +244,6 @@ put_var MATCH_GIT_URL "$CERTS_SSH"
 put_var MATCH_GIT_BRANCH "$MATCH_BRANCH"
 unset MATCH_PASSWORD KC_PASS
 
-say "Done. Every push to main now builds Apple TV and uploads it to TestFlight."
+say "Done. Every push to main now builds iPhone/iPad, Apple TV, Vision Pro and Mac and uploads them to TestFlight."
 echo "   Run one now: gh workflow run testflight.yml --repo $APP_REPO --ref main"
 echo "   Keep the .p8 somewhere safe offline; Apple will not let you download it again."
