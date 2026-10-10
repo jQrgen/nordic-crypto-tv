@@ -1,6 +1,5 @@
 import SwiftUI
 import AVKit
-import CoreImage.CIFilterBuiltins
 
 // MARK: - Surfaces
 
@@ -353,53 +352,6 @@ struct Disclaimer: View {
             .foregroundStyle(NL.textTertiary)
             .frame(maxWidth: .infinity, alignment: .center)
             .multilineTextAlignment(.center)
-    }
-}
-
-// MARK: - QR (Apple TV has no browser)
-
-struct QRPanel: View {
-    let url: URL
-    let caption: LocalizedStringKey
-
-    var body: some View {
-        VStack(spacing: 18) {
-            QRCodeImage(url: url)
-                .frame(width: 320, height: 320)
-                .padding(24)
-                .background(.white, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            Text(caption)
-                .font(NLFont.kicker)
-                .foregroundStyle(NL.textPrimary)
-                .multilineTextAlignment(.center)
-            Text(verbatim: url.host() ?? "")
-                .font(NLFont.caption)
-                .foregroundStyle(NL.textTertiary)
-        }
-        .frame(width: 380)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("QR code linking to \(url.host() ?? url.absoluteString)"))
-    }
-}
-
-struct QRCodeImage: View {
-    let url: URL
-
-    var body: some View {
-        if let image = Self.cgImage(for: url.absoluteString) {
-            Image(decorative: image, scale: 1)
-                .interpolation(.none)
-                .resizable()
-                .scaledToFit()
-        }
-    }
-
-    static func cgImage(for string: String) -> CGImage? {
-        let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(string.utf8)
-        filter.correctionLevel = "M"
-        guard let output = filter.outputImage?.transformed(by: CGAffineTransform(scaleX: 12, y: 12)) else { return nil }
-        return CIContext().createCGImage(output, from: output.extent)
     }
 }
 

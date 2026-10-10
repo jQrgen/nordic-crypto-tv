@@ -211,6 +211,14 @@ struct SpotlightModule: View {
                                 .foregroundStyle(NL.textSecondary)
                                 .lineLimit(1)
                         }
+                        // A sentence about who or what is shown (who's-who description, course "about").
+                        if let text = detail(item) {
+                            Text(verbatim: text)
+                                .font(.system(size: 17))
+                                .foregroundStyle(NL.textSecondary)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     Spacer(minLength: 0)
                 }
