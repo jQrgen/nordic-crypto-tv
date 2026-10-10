@@ -1,0 +1,311 @@
+# TestFlight lanes for Nordic Crypto on Apple TV (tvOS).
+#
+#   bundle exec fastlane ios beta        # signed App Store build for tvOS, upload to TestFlight
+#   bundle exec fastlane ios distribute  # wait for processing, "What to Test", internal + external groups
+#
+# .github/workflows/testflight.yml runs both on every push to main. Credentials
+# come from environment variables (GitHub Actions secrets and variables, set
+# once by scripts/setup-signing-github.sh). Nothing secret is stored in the
+# repository, and nothing here prints a secret.
+
+# __dir__ is "." inside a Fastfile, so paths are built from the fastlane folder.
+FASTLANE_DIR = File.expand_path(FastlaneCore::FastlaneFolder.path).freeze
+ROOT_DIR = File.expand_path("..", FASTLANE_DIR).freeze
+
+require "securerandom"
+require "shellwords"
+
+default_platform(:ios)
+
+def require_env(*names)
+  missing = names.select { |name| ENV[name].to_s.strip.empty? }
+  UI.user_error!("Missing environment variables: #{missing.join(', ')}") unless missing.empty?
+end
+
+def env_or(name, default)
+  ENV[name].to_s.strip.empty? ? default : ENV[name].strip
+end
+
+# Writes a step output for the GitHub Actions workflow (no-op elsewhere).
+def github_output(name, value)
+  path = ENV["GITHUB_OUTPUT"].to_s
+  File.open(path, "a") { |f| f.puts("#{name}=#{value}") } unless path.empty?
+end
+
+# A GitHub Actions annotation (shown on the run page), or a plain message locally.
+def github_annotation(level, title, message)
+  if ENV["GITHUB_ACTIONS"] == "true"
+    puts "::#{level} title=#{title}::#{message.gsub(/\r?\n/, ' ')}"
+    File.open(ENV["GITHUB_STEP_SUMMARY"], "a") { |f| f.puts("**#{title}:** #{message}\n") } unless ENV["GITHUB_STEP_SUMMARY"].to_s.empty?
+  else
+    UI.important("#{title}: #{message}")
+  end
+end
+
+platform :ios do
+  PROJECT_YML = File.join(ROOT_DIR, "project.yml").freeze
+  XCODE_PROJECT = File.join(ROOT_DIR, "NordicCrypto.xcodeproj").freeze
+  SCHEME = "NordicCrypto".freeze
+  KEYCHAIN = "nordic-crypto-tv-ci.keychain".freeze
+  BUILD_DIR = File.join(ROOT_DIR, "build", "tvos").freeze
+  PLATFORM = "appletvos".freeze # fastlane's name for tvOS
+  # The app's primary locale; TestFlight's "What to Test" is written there.
+  WHAT_TO_TEST_LOCALE = "en-GB".freeze
+
+  # First value of `KEY: value` in project.yml (base settings come first).
+  def project_setting(name)
+    line = File.readlines(PROJECT_YML).find { |l| l =~ /^\s*#{Regexp.escape(name)}:\s*\S/ }
+    UI.user_error!("#{name} not found in #{PROJECT_YML}") unless line
+    line.split(":", 2).last.strip.delete('"')
+  end
+
+  def app_bundle_id
+    env_or("APP_BUNDLE_ID", project_setting("PRODUCT_BUNDLE_IDENTIFIER"))
+  end
+
+  def marketing_version
+    env_or("VERSION_NAME", project_setting("MARKETING_VERSION"))
+  end
+
+  def internal_group_name
+    env_or("TESTFLIGHT_INTERNAL_GROUP", "internt")
+  end
+
+  def external_group_name
+    env_or("TESTFLIGHT_EXTERNAL_GROUP", "Beta")
+  end
+
+  def asc_api_key
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true,
+      duration: 1200
+    )
+  end
+
+  def asc_app(api_key)
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: api_key)
+    Spaceship::ConnectAPI::App.find(app_bundle_id) or UI.user_error!("No App Store Connect app for #{app_bundle_id}")
+  end
+
+  # Highest tvOS build number App Store Connect already has (any version).
+  def latest_tvos_build_number(app)
+    builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      platform: Spaceship::ConnectAPI::Platform::TV_OS,
+      sort: "-uploadedDate",
+      limit: 200
+    )
+    builds.map { |b| b.version.to_i }.max || 0
+  end
+
+  def git(*args)
+    out = IO.popen(["git", "-C", ROOT_DIR, *args], err: File::NULL, &:read)
+    $?.success? ? out.strip : ""
+  end
+
+  # A commit message without trailers (Co-authored-by:, Signed-off-by:, ...).
+  def commit_message(rev)
+    git("log", "-1", "--format=%B", rev).lines.map(&:rstrip)
+                                        .reject { |l| l =~ /\A[A-Za-z][A-Za-z-]*-[Bb]y:\s|\A[A-Z][A-Za-z]+-(Session|Id):\s/ }
+                                        .join("\n").strip
+  end
+
+  # "What to Test": the message of the commit being built. For a GitHub merge
+  # commit ("Merge pull request #N from ...") it is the PR title (the merge
+  # commit's body), then the merged commit's message, or the subjects of the
+  # merged commits when there are several. Needs the full history (checkout
+  # with fetch-depth: 0).
+  def what_to_test
+    sha = git("rev-parse", env_or("GITHUB_SHA", "HEAD"))
+    sha = env_or("GITHUB_SHA", "HEAD") if sha.empty?
+    message = commit_message(sha)
+    parents = git("rev-list", "--parents", "-n", "1", sha).split.drop(1)
+    if parents.size == 2
+      title = message.lines.drop(1).join.strip
+      merged = git("log", "--reverse", "--format=%H", "#{parents[0]}..#{parents[1]}").split
+      details = if merged.size == 1
+                  commit_message(merged.first)
+                else
+                  merged.map { |c| "- #{git('log', '-1', '--format=%s', c)}" }.join("\n")
+                end
+      message = [title, details].reject(&:empty?).join("\n\n")
+    end
+    message = "Latest build from main." if message.empty?
+    "#{message}\n\nCommit #{sha[0, 7]}"
+  end
+
+  desc "Build the tvOS app with App Store signing (match, readonly) and upload it to TestFlight"
+  lane :beta do
+    require_env(
+      "APPLE_TEAM_ID",
+      "APP_STORE_CONNECT_API_KEY_ID",
+      "APP_STORE_CONNECT_API_KEY_ISSUER_ID",
+      "APP_STORE_CONNECT_API_KEY",
+      "MATCH_GIT_URL",
+      "MATCH_PASSWORD"
+    )
+    UI.user_error!("#{XCODE_PROJECT} is missing: run scripts/xcodegen.sh first") unless File.directory?(XCODE_PROJECT)
+    app_id = app_bundle_id
+    team_id = ENV["APPLE_TEAM_ID"]
+    version = marketing_version
+    api_key = asc_api_key
+    app = asc_app(api_key)
+
+    # The run number gives a monotonic build number; never go below what
+    # App Store Connect already has (manual uploads, re-runs).
+    requested = ENV["BUILD_NUMBER"].to_i
+    latest = latest_tvos_build_number(app)
+    build_number = [requested, latest + 1].max
+    UI.important("Build number #{requested} is taken (latest tvOS build is #{latest}); using #{build_number}") if build_number != requested
+    UI.message("Nordic Crypto for Apple TV #{version} (#{build_number})")
+
+    # A throwaway keychain holds the distribution certificate for this job only.
+    keychain_password = SecureRandom.hex(24)
+    create_keychain(
+      name: KEYCHAIN,
+      password: keychain_password,
+      default_keychain: false,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false,
+      add_to_search_list: true
+    )
+
+    begin
+      # readonly: CI only downloads the certificate and the tvOS App Store
+      # profile; it never creates or revokes anything in the developer account.
+      # git_url comes from MATCH_GIT_URL, read over SSH with the read-only deploy
+      # key that the workflow sets up through GIT_SSH_COMMAND.
+      match(
+        type: "appstore",
+        platform: "tvos",
+        readonly: true,
+        git_branch: env_or("MATCH_GIT_BRANCH", "main"),
+        app_identifier: app_id,
+        team_id: team_id,
+        api_key: api_key,
+        keychain_name: KEYCHAIN,
+        keychain_password: keychain_password
+      )
+      profile_name = ENV["sigh_#{app_id}_appstore_tvos_profile-name"]
+      UI.user_error!("match did not return a tvOS App Store profile for #{app_id}") if profile_name.to_s.empty?
+
+      # Manual signing for this build only (command-line settings); project.yml
+      # keeps automatic signing for local development.
+      xcargs = {
+        "CODE_SIGN_STYLE" => "Manual",
+        "DEVELOPMENT_TEAM" => team_id,
+        "CODE_SIGN_IDENTITY" => "Apple Distribution",
+        "PROVISIONING_PROFILE_SPECIFIER" => profile_name,
+        "PRODUCT_BUNDLE_IDENTIFIER" => app_id,
+        "CURRENT_PROJECT_VERSION" => build_number.to_s,
+        "MARKETING_VERSION" => version
+      }.map { |k, v| "#{k}=#{v.shellescape}" }.join(" ")
+
+      build_app(
+        project: XCODE_PROJECT,
+        scheme: SCHEME,
+        configuration: "Release",
+        sdk: PLATFORM,
+        destination: "generic/platform=tvOS",
+        export_method: "app-store",
+        export_team_id: team_id,
+        export_options: { provisioningProfiles: { app_id => profile_name } },
+        xcargs: xcargs,
+        output_directory: BUILD_DIR,
+        derived_data_path: File.join(BUILD_DIR, "DerivedData"),
+        output_name: "NordicCryptoTV.ipa",
+        clean: true
+      )
+
+      # Apple's processing takes a while; the distribute lane (on Linux) waits.
+      upload_to_testflight(
+        api_key: api_key,
+        ipa: lane_context[SharedValues::IPA_OUTPUT_PATH],
+        app_platform: PLATFORM,
+        skip_waiting_for_build_processing: true
+      )
+    ensure
+      delete_keychain(name: KEYCHAIN)
+    end
+
+    github_output("build_number", build_number)
+    github_output("version_name", version)
+    UI.success("Uploaded #{version} (#{build_number}) for tvOS")
+  end
+
+  desc "Wait for processing, set What to Test, give the build to the internal group and the external (public link) group"
+  lane :distribute do
+    require_env(
+      "APP_STORE_CONNECT_API_KEY_ID",
+      "APP_STORE_CONNECT_API_KEY_ISSUER_ID",
+      "APP_STORE_CONNECT_API_KEY",
+      "BUILD_NUMBER"
+    )
+    build_number = ENV["BUILD_NUMBER"]
+    version = marketing_version
+    api_key = asc_api_key
+    app = asc_app(api_key)
+
+    FastlaneCore::BuildWatcher.wait_for_build_processing_to_be_complete(
+      app_id: app.id,
+      platform: PLATFORM,
+      app_version: version,
+      build_version: build_number,
+      poll_interval: 30,
+      timeout_duration: 3600,
+      return_spaceship_testflight_build: false
+    )
+    build = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id, version: version, build_number: build_number,
+      platform: Spaceship::ConnectAPI::Platform::TV_OS, limit: 10
+    ).first or UI.user_error!("Build #{version} (#{build_number}) not found")
+
+    # Internal group: a group with access to all builds gets this one by itself.
+    groups = app.get_beta_groups
+    internal = groups.find { |g| g.name == internal_group_name }
+    if internal.nil?
+      github_annotation("warning", "Internal group missing", "No TestFlight group named #{internal_group_name}.")
+    elsif internal.has_access_to_all_builds
+      UI.message("#{internal.name}: has access to all builds")
+    else
+      build.add_beta_groups(beta_groups: [internal])
+      UI.message("#{internal.name}: build added")
+    end
+
+    # External group with the public link: needs What to Test and (for a new
+    # version) Beta App Review. While another build of this version is waiting
+    # for or in review, Apple refuses a second submission; the build then stays
+    # with internal testers and the next push (or a re-run) tries again.
+    begin
+      upload_to_testflight(
+        api_key: api_key,
+        distribute_only: true,
+        app_identifier: app_bundle_id,
+        app_platform: PLATFORM,
+        app_version: version,
+        build_number: build_number,
+        distribute_external: true,
+        groups: [external_group_name],
+        notify_external_testers: true,
+        submit_beta_review: true,
+        uses_non_exempt_encryption: false,
+        # Off by default: with "true" a build still waiting for review is
+        # withdrawn so this one can be submitted instead.
+        reject_build_waiting_for_review: ENV["TESTFLIGHT_REJECT_BUILD_WAITING_FOR_REVIEW"] == "true",
+        localized_build_info: { WHAT_TO_TEST_LOCALE => { whats_new: what_to_test } }
+      )
+      UI.success("Build #{version} (#{build_number}) sent to #{external_group_name}")
+    rescue => e
+      raise unless e.message =~ /another build|ANOTHER_BUILD|waiting for review/i
+      github_annotation(
+        "warning",
+        "External TestFlight waits",
+        "Build #{version} (#{build_number}) is with internal testers. #{external_group_name} gets a later build: another build is still in Beta App Review (#{e.message})."
+      )
+    end
+  end
+end

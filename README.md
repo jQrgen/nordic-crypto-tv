@@ -39,6 +39,11 @@ Not investment advice. Headlines belong to their publishers.
 [![Download the Android APK](https://img.shields.io/badge/Download%20APK-Android%20·%20Android%20TV-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/jQrgen/nordic-crypto-tv/releases/download/android-latest/nordic-crypto.apk)
 
 - **TestFlight (iPhone, iPad, Mac, Vision Pro, Apple TV):** https://testflight.apple.com/join/nQ2fpjZn
+  - **On Apple TV:** install the free [TestFlight app](https://apps.apple.com/app/testflight/id899247664)
+    from the App Store on the Apple TV (tvOS 18 or later), then open the
+    [signup link](https://testflight.apple.com/join/nQ2fpjZn) on an iPhone, iPad or Mac signed in to the
+    same Apple Account and accept the invitation. Nordic Crypto then shows up in TestFlight on the
+    Apple TV, ready to install. Every change merged to `main` becomes a new Apple TV build there.
 - **Android APK (phone, tablet, Android TV):** the [latest build](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest)
   from CI, updated on every change. Open it on the device and allow installs from your browser. On
   Android TV, install it with a file manager or `adb install nordic-crypto.apk`.
@@ -77,10 +82,11 @@ All of it is built on the open [Nordic Crypto data API](https://github.com/jQrge
 ### Apple (SwiftUI, one multiplatform target)
 ```sh
 brew install xcodegen
-xcodegen generate
+xcodegen generate                   # or scripts/xcodegen.sh: the pinned XcodeGen that CI uses
 open NordicCrypto.xcodeproj
 ```
 - Tests: `xcodebuild test -scheme NordicCrypto -destination 'platform=tvOS Simulator,name=<sim>'`
+  (pull requests run the unit tests on an Apple TV simulator: [Build workflow](.github/workflows/build.yml), no secrets)
 - Icons and Top Shelf art: `python3 support/make_brand_assets.py`
 - Translations: `python3 support/translations.py` writes `NordicCrypto/Localizable.xcstrings`
 - App Store listing and screenshots: see `support/appstore/`
@@ -110,6 +116,31 @@ fastlane `supply` whenever it changes on `main`, using the same secret. Category
 The apps try `https://nordiccrypto.no/api/v1/` first, then the older addresses. The last good
 response is cached, and a snapshot of the API ships with the apps, so the first launch and offline
 use always show content. `support/refresh_snapshot.sh` refreshes it.
+
+## Deploying to TestFlight (Apple TV)
+Every push to `main` builds the Apple TV app on a GitHub-hosted Mac (Xcode 27.0), signs it with
+[fastlane match](https://docs.fastlane.tools/actions/match/) and uploads it to TestFlight
+([TestFlight workflow](.github/workflows/testflight.yml), lanes in `fastlane/Fastfile`). The build then
+goes to the internal group `internt` and to the external group `Beta` (the public link above), with
+"What to Test" taken from the commit message. The build number is the workflow run number + 10
+(variable `BUILD_NUMBER_OFFSET`) and never lower than App Store Connect's latest tvOS build + 1; the
+version is `MARKETING_VERSION` in `project.yml`. If another build of the same version is still in Beta
+App Review, the new build stays with internal testers and the run stays green with a warning. Pull
+requests never get secrets.
+
+One-time setup (personal team `YQBXSUUVJD`, never the Bitcoin Unlimited team): with `gh` logged in as
+jQrgen and the match password in the login keychain (service `nordic-crypto-wallet-match`, from the
+wallet's setup), run from a checkout of this repo:
+```sh
+bash scripts/setup-signing-github.sh --key-id <KEY_ID> --issuer-id <ISSUER_ID> --p8 <path/to/AuthKey_KEY_ID.p8>
+```
+It stores the App Store Connect API key and the match password as repository secrets, runs
+`fastlane match appstore --platform tvos` once for `no.cryptonordic.tv` (the tvOS App Store profile in
+`jQrgen/nordic-crypto-wallet-certificates`, so CI stays readonly), adds a read-only deploy key for that
+repo (secret `MATCH_GIT_PRIVATE_KEY`) and sets the variables `APPLE_TEAM_ID`, `MATCH_GIT_URL` and
+`MATCH_GIT_BRANCH`. Until then the TestFlight workflow skips with a notice. To deploy by hand:
+`gh workflow run testflight.yml --ref main`. iPhone, iPad, Mac and Vision Pro builds are still uploaded
+from Xcode.
 
 ## Licence and contributing
 MIT, see [LICENSE](LICENSE). Issues and pull requests are welcome. The news data comes from the

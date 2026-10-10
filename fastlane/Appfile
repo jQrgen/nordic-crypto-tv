@@ -1,0 +1,4 @@
+# Values come from the environment (GitHub Actions variables); nothing secret here.
+# The bundle id default is PRODUCT_BUNDLE_IDENTIFIER in project.yml.
+app_identifier(ENV["APP_BUNDLE_ID"]) unless ENV["APP_BUNDLE_ID"].to_s.strip.empty?
+team_id(ENV["APPLE_TEAM_ID"]) unless ENV["APPLE_TEAM_ID"].to_s.strip.empty?
