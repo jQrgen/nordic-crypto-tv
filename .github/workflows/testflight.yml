@@ -20,6 +20,9 @@
 #               processing, sets "What to Test" from the commit message and
 #               gives the build to the internal group (internt) and the
 #               external group with the public link (Beta).
+# release     ubuntu-latest: when at least one platform reached TestFlight,
+#             creates the GitHub release testflight-v<version>-<build> naming
+#             the platforms that made it, with the commit message as notes.
 #
 # Runs on pushes to main (except Android-only changes) and by hand (Actions >
 # TestFlight > Run workflow, main only). Never on pull requests: this repo is
@@ -218,6 +221,15 @@ jobs:
           TESTFLIGHT_EXTERNAL_GROUP: ${{ vars.TESTFLIGHT_EXTERNAL_GROUP }}
           TESTFLIGHT_REJECT_BUILD_WAITING_FOR_REVIEW: ${{ vars.TESTFLIGHT_REJECT_BUILD_WAITING_FOR_REVIEW }}
         run: bundle exec fastlane ios distribute
+      - name: Mark this platform as deployed (for the GitHub release)
+        run: |
+          mkdir -p "$RUNNER_TEMP/deployed"
+          echo "${{ matrix.platform }}" > "$RUNNER_TEMP/deployed/${{ matrix.platform }}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deployed-${{ matrix.platform }}
+          path: ${{ runner.temp }}/deployed/${{ matrix.platform }}
+          retention-days: 1
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -228,3 +240,55 @@ jobs:
             build/${{ matrix.platform }}/*.dSYM.zip
           if-no-files-found: ignore
           retention-days: 14
+
+  # One GitHub release per deploy that reached TestFlight on at least one platform:
+  # tag testflight-v<version>-<build>, listing the platforms that made it.
+  release:
+    name: GitHub release
+    needs: [gate, plan, testflight]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: deployed-*
+          path: deployed
+          merge-multiple: true
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION_NAME: ${{ needs.gate.outputs.version_name }}
+          BUILD_NUMBER: ${{ needs.plan.outputs.build_number }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          shopt -s nullglob
+          names=()
+          for f in deployed/*; do
+            case "$(cat "$f")" in
+              ios) names+=("iPhone and iPad") ;;
+              tvos) names+=("Apple TV") ;;
+              visionos) names+=("Apple Vision Pro") ;;
+              macos) names+=("Mac") ;;
+            esac
+          done
+          if [ ${#names[@]} -eq 0 ]; then
+            echo "::notice::No platform reached TestFlight; no release."
+            exit 0
+          fi
+          platforms=$(printf '%s, ' "${names[@]}"); platforms=${platforms%, }
+          tag="testflight-v${VERSION_NAME}-${BUILD_NUMBER}"
+          message=${COMMIT_MESSAGE:-$(gh api "repos/$GH_REPO/commits/$GITHUB_SHA" --jq .commit.message)}
+          {
+            echo "Version ${VERSION_NAME} (${BUILD_NUMBER}) is on TestFlight for: ${platforms}."
+            echo
+            echo "Join the beta: https://testflight.apple.com/join/nQ2fpjZn"
+            echo
+            echo "Commit ${GITHUB_SHA::7}:"
+            echo
+            printf '%s\n' "$message"
+          } > notes.md
+          gh release create "$tag" --target "$GITHUB_SHA" \
+            --title "TestFlight ${VERSION_NAME} (${BUILD_NUMBER})" --notes-file notes.md
