@@ -47,6 +47,8 @@ jobs:
         run: |
           export VERSION_CODE=$(( RUN_NUMBER + VERSION_CODE_OFFSET ))
           echo "versionCode $VERSION_CODE"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | head -n 1)" >> "$GITHUB_ENV"
           cp ../NordicCrypto/Localizable.xcstrings app/src/main/assets/Localizable.xcstrings
           ./gradlew --no-daemon :app:assembleRelease :app:bundleRelease
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/nordic-crypto.apk"
@@ -97,6 +99,7 @@ jobs:
           status: completed
 
       - name: Upload to Google Play internal testing (draft app)
+        id: upload_draft
         if: steps.play.outputs.enabled == 'true' && steps.upload.outcome == 'failure'
         uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
         with:
@@ -105,3 +108,28 @@ jobs:
           releaseFiles: ${{ runner.temp }}/nordic-crypto.aab
           track: internal
           status: draft
+
+      # One GitHub release per build that reached Google Play: play-v<version>-<code>, with the
+      # APK and the app bundle attached and the commit message as notes.
+      - name: Create the GitHub release for this Google Play build
+        if: steps.upload.outcome == 'success' || steps.upload_draft.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_STATUS: ${{ steps.upload.outcome == 'success' && 'released to internal testing' || 'uploaded as a draft release (the app is still a draft in Play Console)' }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          message=${COMMIT_MESSAGE:-$(git log -1 --format=%B)}
+          tag="play-v${VERSION_NAME}-${VERSION_CODE}"
+          {
+            echo "Android ${VERSION_NAME} (version code ${VERSION_CODE}) was ${RELEASE_STATUS} on Google Play."
+            echo
+            echo "Phone, tablet and Android TV. The APK can also be installed directly."
+            echo
+            echo "Commit ${GITHUB_SHA::7}:"
+            echo
+            printf '%s\n' "$message"
+          } > "$RUNNER_TEMP/notes.md"
+          gh release create "$tag" --target "$GITHUB_SHA" \
+            --title "Google Play ${VERSION_NAME} (${VERSION_CODE})" --notes-file "$RUNNER_TEMP/notes.md" \
+            "$RUNNER_TEMP/nordic-crypto.apk#nordic-crypto-${VERSION_NAME}-${VERSION_CODE}.apk" \
+            "$RUNNER_TEMP/nordic-crypto.aab#nordic-crypto-${VERSION_NAME}-${VERSION_CODE}.aab"
