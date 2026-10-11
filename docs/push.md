@@ -137,17 +137,33 @@ shows them (Cloudflare the client IP of a registration; Apple and Google the tok
   build settings, so no `google-services.json` and no Google Services Gradle plugin are needed. With
   notifications off, Firebase never creates a token (`firebase_messaging_auto_init_enabled` is
   false); there is no Firebase Analytics.
-- New secrets live only in Cloudflare and GitHub, set by the owner's script.
+- New secrets live only in GitHub repository secrets (set once by the owner's script) and, copied
+  there by the deploy job, in the Worker.
 
 ## Deployment
 
-- **CI:** [`.github/workflows/push.yml`](../.github/workflows/push.yml) runs the unit tests, the
-  country-name check and `wrangler deploy --dry-run` on every pull request and push that touches
-  `push/` or the string catalogue. On `main` it deploys with `push/deploy.sh` when the
-  `CLOUDFLARE_API_TOKEN` secret is set, and otherwise skips with a notice.
-- **`push/deploy.sh`** finds or creates the D1 database `nordic-crypto-app-push`, writes its id into
-  a temporary `wrangler.deploy.toml` (the committed `wrangler.toml` keeps a placeholder), applies
-  the migrations, deploys and checks `/v1/health`.
+GitHub Actions is the only deploy path; nothing is deployed from a laptop.
+
+- **[`.github/workflows/push.yml`](../.github/workflows/push.yml)**, job `test`: unit tests, the
+  country-name check and `wrangler deploy --dry-run`, on every pull request that touches `push/`,
+  the string catalogue or the workflow, and before every deploy.
+- Job `deploy`: on **every push to `main`** and every manual run (Actions → Push server → Run
+  workflow), after the tests, [`push/deploy.sh`](../push/deploy.sh) does everything in one run:
+  1. finds or creates the D1 database `nordic-crypto-app-push` and writes its id into a temporary
+     `wrangler.deploy.toml` (the committed `wrangler.toml` keeps a placeholder);
+  2. applies the D1 migrations;
+  3. deploys the code;
+  4. uploads the Worker secrets `APNS_KEY_P8`, `APNS_KEY_ID`, `APNS_TEAM_ID` and
+     `FCM_SERVICE_ACCOUNT_JSON` from the repository secrets of the same names with
+     `wrangler secret bulk`: the JSON is built in memory by Node, checked (a `.p8` key, a service
+     account key, never the Bitcoin Unlimited team id), and handed to wrangler on stdin, never
+     written to a file or printed. A secret that is not set is skipped with a notice and the
+     Worker keeps its current value;
+  5. checks `/v1/health`, which reports `"apns"` and `"fcm"` as true once the credentials are in.
+
+  Without `CLOUDFLARE_API_TOKEN` the job skips with a notice. Repository secrets used:
+  `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `APNS_KEY_P8`, `APNS_KEY_ID`, `APNS_TEAM_ID`,
+  `FCM_SERVICE_ACCOUNT_JSON`.
 - **Android builds** read `FIREBASE_APP_ID`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID` and
   `FIREBASE_SENDER_ID` from the environment ([android.yml](../.github/workflows/android.yml) passes
   the repository secrets of the same names) or from `~/.gradle/gradle.properties`
@@ -157,19 +173,20 @@ shows them (Cloudflare the client IP of a registration; Apple and Google the tok
 
 ## One-time setup (owner)
 
-Agents never set these secrets. Everything below uses personal accounts.
+Agents never set these secrets. Everything below uses personal accounts. Do steps 1 to 4 **before
+merging**: once the push entitlement is in `main`, TestFlight builds for iPhone, iPad, Vision Pro
+and Mac need provisioning profiles that include Push Notifications.
 
 1. **Apple** (developer.apple.com, team **YQBXSUUVJD**):
    1. Certificates, Identifiers & Profiles → Identifiers → `no.cryptonordic.tv` → enable
-      **Push Notifications** → Save.
+      **Push Notifications** → Save. This invalidates the current App Store profiles.
    2. Keys → **+** → name "Nordic Crypto push", tick **Apple Push Notifications service (APNs)**,
       environment **Sandbox & Production** → download `AuthKey_<KEYID>.p8` (only once) and note the
       Key ID.
-   3. Regenerate the App Store profiles so they carry the push entitlement: re-run PR #4's
-      `bash scripts/setup-signing-github.sh …` (it runs `fastlane match appstore` for ios, tvos and
-      macos), or directly
-      `bundle exec fastlane match appstore --app_identifier no.cryptonordic.tv --platform ios --force`
-      and the same with `--platform macos` (and `--platform tvos`, harmless). Xcode's automatic
+   3. Regenerate the App Store profiles so they carry the push entitlement: re-run
+      `bash scripts/setup-signing-github.sh --key-id … --issuer-id … --p8 …` (it runs
+      `fastlane match appstore` for ios, tvos and macos and recreates invalid profiles). If a
+      profile is still the old one, run match for that platform with `--force`. Xcode's automatic
       signing picks up the capability by itself for local builds.
 2. **Firebase** (console.firebase.google.com, personal Google account):
    1. Create a project (e.g. `nordic-crypto-push`), no Google Analytics.
@@ -184,7 +201,7 @@ Agents never set these secrets. Everything below uses personal accounts.
 3. **Cloudflare** (the account with the `nordiccrypto.workers.dev` subdomain): My Profile → API
    Tokens → Create token with **Account › Workers Scripts › Edit**, **Account › D1 › Edit** and
    **Account › Account Settings › Read**.
-4. **Run** from a checkout of this repository, with `gh` logged in as jQrgen and Node 22.13 or newer:
+4. **Run once** from a checkout of this repository, with `gh` logged in as jQrgen and Node:
 
    ```sh
    bash scripts/setup-push-secrets.sh \
@@ -193,11 +210,14 @@ Agents never set these secrets. Everything below uses personal accounts.
      --google-services ~/keys/google-services.json
    ```
 
-   It asks for the Cloudflare token (hidden), deploys the Worker once (creating the D1 database),
-   sets the Worker secrets `APNS_KEY_P8`, `APNS_KEY_ID`, `APNS_TEAM_ID`,
-   `FCM_SERVICE_ACCOUNT_JSON`, and the GitHub secrets `CLOUDFLARE_API_TOKEN`,
-   `CLOUDFLARE_ACCOUNT_ID`, `FIREBASE_APP_ID`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`,
-   `FIREBASE_SENDER_ID`. It prints no secret value. Afterwards
+   It asks for the Cloudflare token (hidden), checks it and looks up the account id with the
+   Cloudflare API, and only writes GitHub repository secrets (`gh secret set`, values on stdin,
+   nothing printed, nothing written to disk): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
+   `APNS_KEY_P8`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `FCM_SERVICE_ACCOUNT_JSON`, `FIREBASE_APP_ID`,
+   `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`. It makes no wrangler calls.
+   Then it starts the Push server workflow on `main` (skip with `--no-deploy`; before the merge
+   the first push to `main` deploys). From then on everything deploys from Actions; to rotate a
+   key, run the script again. Afterwards
    `curl https://nordic-crypto-app-push.nordiccrypto.workers.dev/v1/health` shows
    `"apns":true,"fcm":true`.
 5. **Store forms and policy:**

@@ -3,8 +3,9 @@
 # iPhone, iPad, Mac, Vision Pro (APNs) and Android (FCM) devices that asked for
 # that story's country. See docs/push.md.
 #
-# Do not put secrets in this file. Set them with scripts/setup-push-secrets.sh:
-#   APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID, FCM_SERVICE_ACCOUNT_JSON
+# Do not put secrets in this file. The Worker secrets APNS_KEY_P8, APNS_KEY_ID,
+# APNS_TEAM_ID and FCM_SERVICE_ACCOUNT_JSON are GitHub repository secrets (set by
+# scripts/setup-push-secrets.sh); the deploy job uploads them (push/deploy.sh).
 name = "nordic-crypto-app-push"
 main = "src/worker.js"
 compatibility_date = "2026-09-01"

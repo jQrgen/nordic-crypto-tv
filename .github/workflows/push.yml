@@ -1,21 +1,26 @@
-# The app push server (push/, a Cloudflare Worker): tests on every pull request
-# and push that touches it; deploys on main.
+# The app push server (push/, a Cloudflare Worker). GitHub Actions is the only
+# deploy path: nothing is deployed from a laptop.
 #
-# test    unit tests (no network), the generated country names, wrangler deploy --dry-run.
-# deploy  main only, and only when the CLOUDFLARE_API_TOKEN secret is set; otherwise
-#         it skips with a notice. push/deploy.sh finds or creates the D1 database,
-#         applies the migrations and deploys. The Worker's own secrets (APNs key,
-#         FCM service account) are set once by scripts/setup-push-secrets.sh and
-#         never pass through this workflow.
+# test    unit tests (no network), the generated country names, wrangler deploy
+#         --dry-run. Every pull request that touches push/, and every run.
+# deploy  every push to main and every manual run (Actions > Push server > Run
+#         workflow, main only), after the tests: push/deploy.sh creates the D1
+#         database if needed, applies the migrations, deploys the code, uploads
+#         the Worker secrets below with `wrangler secret bulk` (stdin, never a
+#         file, never printed) and checks /v1/health. Skips with a notice while
+#         CLOUDFLARE_API_TOKEN is not set.
 #
-# Secrets (names only; values are set by scripts/setup-push-secrets.sh):
+# Repository secrets (names only; values are set once by
+# scripts/setup-push-secrets.sh):
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID   (APNs key of the personal team YQBXSUUVJD)
+#   FCM_SERVICE_ACCOUNT_JSON                 (Firebase service account key)
+# A secret that is not set is skipped with a notice; the Worker keeps its value.
 name: Push server
 
 on:
   push:
     branches: [main]
-    paths: ["push/**", "NordicCrypto/Localizable.xcstrings", ".github/workflows/push.yml"]
   pull_request:
     paths: ["push/**", "NordicCrypto/Localizable.xcstrings", ".github/workflows/push.yml"]
   workflow_dispatch:
@@ -23,6 +28,7 @@ on:
 permissions:
   contents: read
 
+# One deploy at a time; a newer pending run replaces an older pending one.
 concurrency:
   group: push-server-${{ github.ref }}
   cancel-in-progress: false
@@ -68,6 +74,7 @@ jobs:
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "::notice title=Push server not deployed::CLOUDFLARE_API_TOKEN is not set. Run scripts/setup-push-secrets.sh once (docs/push.md)."
+            echo "Push server not deployed: CLOUDFLARE_API_TOKEN is not set. Run scripts/setup-push-secrets.sh once (docs/push.md)." >> "$GITHUB_STEP_SUMMARY"
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.check.outputs.enabled == 'true'
@@ -84,6 +91,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          APNS_KEY_P8: ${{ secrets.APNS_KEY_P8 }}
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+          APNS_TEAM_ID: ${{ secrets.APNS_TEAM_ID }}
+          FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
           WRANGLER_SEND_METRICS: "false"
         run: |
           npm ci --no-audit --no-fund
