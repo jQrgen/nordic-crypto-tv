@@ -16,7 +16,7 @@ struct TodayView: View {
                 }
             }
             #endif
-            #if os(iOS)
+            #if os(iOS) || os(visionOS)
             .toolbar {
                 ToolbarItem {
                     Button { showAlerts = true } label: { Label("Notifications", systemImage: "bell") }

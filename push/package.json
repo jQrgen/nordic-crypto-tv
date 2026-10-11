@@ -1,0 +1,16 @@
+{
+  "name": "nordic-crypto-app-push",
+  "private": true,
+  "type": "module",
+  "description": "Push notifications for new Nordic Crypto stories to the iOS, iPadOS, macOS, visionOS and Android apps",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.mjs",
+    "check-copy": "node scripts/gen-copy.mjs --check",
+    "copy": "node scripts/gen-copy.mjs",
+    "dry-run": "wrangler deploy --dry-run --outdir dist"
+  },
+  "devDependencies": {
+    "wrangler": "4.141.0"
+  }
+}

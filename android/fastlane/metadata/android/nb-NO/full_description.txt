@@ -23,7 +23,7 @@ PÅ ALLE SKJERMER
 • Android TV som informasjonsskjerm for kontoret, meetupen eller stua: hovedsaker, agenda og spotlight bytter av seg selv, med Radio Norge i bakgrunnen. Play/Pause på fjernkontrollen slår radioen av og på.
 
 PERSONVERN FRA STARTEN
-Ingen konto, ingen sporing, ingen reklame. Appen leser bare offentlige nyhetsdata, og varsler sjekkes på enheten.
+Ingen konto, ingen sporing, ingen reklame. Varsler slår du på selv: push-serveren vår lagrer bare push-tokenet til enheten, landene du velger og språket ditt, og sletter dem når du slår av varsler.
 
 Åpen kildekode: github.com/jQrgen/nordic-crypto-tv
 

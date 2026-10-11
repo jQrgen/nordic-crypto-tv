@@ -1,10 +1,11 @@
-#if os(iOS) || os(macOS)
+#if os(iOS) || os(macOS) || os(visionOS)
 import SwiftUI
 import UserNotifications
 
 /// Notifications for new stories, per country.
 struct AlertSettingsView: View {
     @State private var alerts = NewsAlerts.shared
+    @State private var push = PushRegistration.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
@@ -17,7 +18,7 @@ struct AlertSettingsView: View {
                 if alerts.authorization == .denied {
                     Label("Notifications are turned off for Nordic Crypto in Settings.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(NL.warning)
-                    #if os(iOS)
+                    #if os(iOS) || os(visionOS)
                     Button("Open Settings") {
                         if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                     }
@@ -42,7 +43,7 @@ struct AlertSettingsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Notifications")
-        #if os(iOS)
+        #if os(iOS) || os(visionOS)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
         }
@@ -51,10 +52,15 @@ struct AlertSettingsView: View {
     }
 
     private var footer: LocalizedStringKey {
-        #if os(macOS)
-        "Nordic Crypto checks for new stories every 15 minutes while it runs, also from the menu bar. Nothing about you leaves this Mac."
+        let pushText: LocalizedStringKey = "New stories arrive as push notifications, delivered by Apple or Google. Our push server keeps only this device's push token, the countries you pick and your language. Turning notifications off deletes them."
+        #if os(visionOS)
+        return pushText
+        #elseif os(macOS)
+        return push.active ? pushText
+            : "Nordic Crypto checks for new stories every 15 minutes while it runs, also from the menu bar. Nothing about you leaves this Mac."
         #else
-        "Your iPhone or iPad checks for new stories in the background; iOS decides when, so a notification can come some time after a story is published. Nothing about you leaves the device."
+        return push.active ? pushText
+            : "Your iPhone or iPad checks for new stories in the background; iOS decides when, so a notification can come some time after a story is published. Nothing about you leaves the device."
         #endif
     }
 }

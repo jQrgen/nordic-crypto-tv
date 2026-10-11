@@ -26,6 +26,6 @@ PÅ ALLE SKJERMER
 • Apple TV som infoskjerm: hovedsaker, arrangementer, en rad per land og de siste overskriftene, som hver bytter innhold for seg, med Radio Norge i bakgrunnen. Play/Pause på fjernkontrollen skrur radioen av og på.
 
 PERSONVERN FRA START
-Ingen konto, ingen sporing, ingen reklame. Appen leser bare offentlige nyhetsdata.
+Ingen konto, ingen sporing, ingen reklame. Varsler slår du på selv: push-serveren vår lagrer bare push-tokenet til enheten, landene du velger og språket ditt, og sletter dem når du slår av varsler.
 
 Overskriftene tilhører utgiverne. Nordic Crypto er nyheter, ikke investeringsråd.

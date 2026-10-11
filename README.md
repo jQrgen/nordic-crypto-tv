@@ -1,6 +1,6 @@
 # Nordic Crypto
 
-[![TestFlight deploy](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/testflight.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/testflight.yml) [![TestFlight release](https://img.shields.io/github/v/release/jQrgen/nordic-crypto-tv?filter=testflight-*&label=TestFlight%20release)](https://github.com/jQrgen/nordic-crypto-tv/releases) [![Apple build check](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/build.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/build.yml) [![Android build](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android.yml) [![Google Play release](https://img.shields.io/github/v/release/jQrgen/nordic-crypto-tv?filter=play-*&label=Google%20Play%20release)](https://github.com/jQrgen/nordic-crypto-tv/releases) [![Play listing](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android-listing.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android-listing.yml) [![Last commit](https://img.shields.io/github/last-commit/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/commits/main) [![Commit activity](https://img.shields.io/github/commit-activity/m/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/graphs/commit-activity) [![Open issues](https://img.shields.io/github/issues/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/issues) [![Open pull requests](https://img.shields.io/github/issues-pr/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/pulls) [![Contributors](https://img.shields.io/github/contributors/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/graphs/contributors) [![Top language](https://img.shields.io/github/languages/top/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv) [![Languages](https://img.shields.io/github/languages/count/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv) [![Code size](https://img.shields.io/github/languages/code-size/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv) [![Repo size](https://img.shields.io/github/repo-size/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv)
+[![TestFlight deploy](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/testflight.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/testflight.yml) [![TestFlight release](https://img.shields.io/github/v/release/jQrgen/nordic-crypto-tv?filter=testflight-*&label=TestFlight%20release)](https://github.com/jQrgen/nordic-crypto-tv/releases) [![Apple build check](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/build.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/build.yml) [![Push server deploy](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/push.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/push.yml) [![Android build](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android.yml) [![Google Play release](https://img.shields.io/github/v/release/jQrgen/nordic-crypto-tv?filter=play-*&label=Google%20Play%20release)](https://github.com/jQrgen/nordic-crypto-tv/releases) [![Play listing](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android-listing.yml/badge.svg)](https://github.com/jQrgen/nordic-crypto-tv/actions/workflows/android-listing.yml) [![Last commit](https://img.shields.io/github/last-commit/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/commits/main) [![Commit activity](https://img.shields.io/github/commit-activity/m/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/graphs/commit-activity) [![Open issues](https://img.shields.io/github/issues/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/issues) [![Open pull requests](https://img.shields.io/github/issues-pr/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/pulls) [![Contributors](https://img.shields.io/github/contributors/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/graphs/contributors) [![Top language](https://img.shields.io/github/languages/top/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv) [![Languages](https://img.shields.io/github/languages/count/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv) [![Code size](https://img.shields.io/github/languages/code-size/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv) [![Repo size](https://img.shields.io/github/repo-size/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv)
 [![Licence: MIT](https://img.shields.io/github/license/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/blob/main/LICENSE) [![Android release](https://img.shields.io/github/v/release/jQrgen/nordic-crypto-tv?include_prereleases&label=android)](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest) [![Release downloads](https://img.shields.io/github/downloads/jQrgen/nordic-crypto-tv/total)](https://github.com/jQrgen/nordic-crypto-tv/releases) [![Stars](https://img.shields.io/github/stars/jQrgen/nordic-crypto-tv?style=flat)](https://github.com/jQrgen/nordic-crypto-tv/stargazers) [![Forks](https://img.shields.io/github/forks/jQrgen/nordic-crypto-tv?style=flat)](https://github.com/jQrgen/nordic-crypto-tv/forks) [![Watchers](https://img.shields.io/github/watchers/jQrgen/nordic-crypto-tv?style=flat)](https://github.com/jQrgen/nordic-crypto-tv/watchers)
 ![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white) ![iPadOS](https://img.shields.io/badge/iPadOS-000000?logo=apple&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white) ![visionOS](https://img.shields.io/badge/visionOS-000000?logo=apple&logoColor=white) ![tvOS](https://img.shields.io/badge/tvOS-000000?logo=appletv&logoColor=white) ![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white) ![Android TV](https://img.shields.io/badge/Android%20TV-3DDC84?logo=androidtv&logoColor=white)
 [![Swift](https://img.shields.io/badge/Swift-F05138?logo=swift&logoColor=white)](https://www.swift.org) [![SwiftUI](https://img.shields.io/badge/SwiftUI-0A84FF?logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/) [![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose) [![XcodeGen](https://img.shields.io/badge/XcodeGen-project.yml-1575F9?logo=xcode&logoColor=white)](https://github.com/yonaskolb/XcodeGen)
@@ -28,8 +28,10 @@ half of them behind paywalls. Nordic Crypto reads them all and gives you one cal
 - **A screen that stays on.** On Apple TV and Android TV the app is an information screen for the
   office, the meetup or the living room: lead stories, the agenda and the spotlight rotate on their
   own while Radio Norge plays in the background (Play/Pause turns it off).
-- **Private by design.** No account, no tracking, no ads. Notifications for new stories are checked
-  on the device.
+- **Private by design.** No account, no tracking, no ads. Notifications for new stories are opt-in
+  push notifications: our push server keeps only the device's push token, the chosen countries and
+  the language, and forgets them when you turn notifications off ([how it works](docs/push.md)). When
+  the push server cannot be reached, the app checks for new stories on the device instead.
 
 Not investment advice. Headlines belong to their publishers.
 
@@ -70,11 +72,11 @@ Not investment advice. Headlines belong to their publishers.
 
 | Platform | What you get |
 |---|---|
-| iPhone, iPad | Today, Countries, Events and Newsletter tabs; story and event pages that open the source; notifications per country |
-| Mac | The same in a window with a sidebar, a menu bar menu with the latest headlines, notifications every 15 minutes |
-| Apple Vision Pro | The iPad layout in a glass window; the newsreel opens in its own window |
+| iPhone, iPad | Today, Countries, Events and Newsletter tabs; story and event pages that open the source; push notifications per country |
+| Mac | The same in a window with a sidebar, a menu bar menu with the latest headlines, push notifications per country |
+| Apple Vision Pro | The iPad layout in a glass window; the newsreel opens in its own window; push notifications per country |
 | Apple TV | The "Kveldsnytt" information screen: lead story, agenda, spotlight, Radio Norge |
-| Android phone, tablet | Today, Countries, Events and Newsletter, notifications per country |
+| Android phone, tablet | Today, Countries, Events and Newsletter, push notifications per country |
 | Android TV | The same information screen as Apple TV, with Radio Norge |
 
 All of it is built on the open [Nordic Crypto data API](https://github.com/jQrgen/nordic-crypto) (`/api/v1/`).
@@ -114,6 +116,16 @@ Bokmål texts; icon, feature graphic, TV banner and screenshots for phone, 7-inc
 and Android TV). The [store listing workflow](.github/workflows/android-listing.yml) uploads it with
 fastlane `supply` whenever it changes on `main`, using the same secret. Category, privacy policy
 (https://nordiccrypto.no/privacy/), Data safety, content rating and ads are set once in Play Console.
+
+### Push notifications
+[`push/`](push/) is the push server, a Cloudflare Worker that polls the API every five minutes and
+sends one notification per new story through APNs (iPhone, iPad, Mac, Vision Pro) and Firebase Cloud
+Messaging (Android) to the devices that chose that story's country. Design, data kept and deployment
+are in [docs/push.md](docs/push.md). Tests: `cd push && npm ci && npm test`. GitHub Actions is the only
+deploy path: the [Push server workflow](.github/workflows/push.yml) tests every change and, on every
+push to `main` and every manual run, deploys the code, the D1 migrations and the Worker's APNs and FCM
+secrets from repository secrets in one run. One-time setup: `scripts/setup-push-secrets.sh` stores those
+repository secrets (it never deploys or prints anything itself).
 
 ### Data
 The apps try `https://nordiccrypto.no/api/v1/` first, then the older addresses. The last good

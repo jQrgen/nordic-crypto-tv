@@ -44,6 +44,12 @@ jobs:
           # ANDROID_VERSION_CODE_OFFSET (default 100) so every upload is higher.
           RUN_NUMBER: ${{ github.run_number }}
           VERSION_CODE_OFFSET: ${{ vars.ANDROID_VERSION_CODE_OFFSET || '100' }}
+          # Firebase client settings for push notifications (docs/push.md), set by
+          # scripts/setup-push-secrets.sh. Empty: the app keeps the on-device check only.
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_SENDER_ID: ${{ secrets.FIREBASE_SENDER_ID }}
         run: |
           export VERSION_CODE=$(( RUN_NUMBER + VERSION_CODE_OFFSET ))
           echo "versionCode $VERSION_CODE"

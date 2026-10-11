@@ -446,6 +446,10 @@ private fun AlertSettings(dismiss: () -> Unit) {
                             onCheckedChange = { Alerts.toggle(ctx, c); countries = Alerts.countries(ctx) })
                     }
                 }
+                if (Push.configured) {
+                    Text(Lang.tr("New stories arrive as push notifications, delivered by Apple or Google. Our push server keeps only this device's push token, the countries you pick and your language. Turning notifications off deletes them."),
+                        style = MaterialTheme.typography.bodySmall)
+                }
             }
         },
     )

@@ -1,0 +1,101 @@
+# The app push server (push/, a Cloudflare Worker). GitHub Actions is the only
+# deploy path: nothing is deployed from a laptop.
+#
+# test    unit tests (no network), the generated country names, wrangler deploy
+#         --dry-run. Every pull request that touches push/, and every run.
+# deploy  every push to main and every manual run (Actions > Push server > Run
+#         workflow, main only), after the tests: push/deploy.sh creates the D1
+#         database if needed, applies the migrations, deploys the code, uploads
+#         the Worker secrets below with `wrangler secret bulk` (stdin, never a
+#         file, never printed) and checks /v1/health. Skips with a notice while
+#         CLOUDFLARE_API_TOKEN is not set.
+#
+# Repository secrets (names only; values are set once by
+# scripts/setup-push-secrets.sh):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID   (APNs key of the personal team YQBXSUUVJD)
+#   FCM_SERVICE_ACCOUNT_JSON                 (Firebase service account key)
+# A secret that is not set is skipped with a notice; the Worker keeps its value.
+name: Push server
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths: ["push/**", "NordicCrypto/Localizable.xcstrings", ".github/workflows/push.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer pending run replaces an older pending one.
+concurrency:
+  group: push-server-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: push/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Unit tests
+        run: npm test
+      - name: Country names match the app's string catalogue
+        run: npm run check-copy
+      - name: wrangler deploy --dry-run
+        run: npx --no-install wrangler deploy --dry-run --outdir "$RUNNER_TEMP/push-dist"
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'jQrgen/nordic-crypto-tv'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check for the Cloudflare token
+        id: check
+        working-directory: .
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" = true ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice title=Push server not deployed::CLOUDFLARE_API_TOKEN is not set. Run scripts/setup-push-secrets.sh once (docs/push.md)."
+            echo "Push server not deployed: CLOUDFLARE_API_TOKEN is not set. Run scripts/setup-push-secrets.sh once (docs/push.md)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: push/package-lock.json
+      - name: Deploy
+        if: steps.check.outputs.enabled == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          APNS_KEY_P8: ${{ secrets.APNS_KEY_P8 }}
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+          APNS_TEAM_ID: ${{ secrets.APNS_TEAM_ID }}
+          FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          npm ci --no-audit --no-fund
+          ./deploy.sh

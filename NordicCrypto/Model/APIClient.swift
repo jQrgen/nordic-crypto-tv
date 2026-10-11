@@ -27,6 +27,8 @@ enum APIConfig {
                    + url.absoluteString.dropFirst(pages.count)) ?? url
     }
     static let refreshInterval: Duration = .seconds(10 * 60)
+    /// The push server (push/ in this repository, docs/push.md).
+    static let pushServer = URL(string: "https://nordic-crypto-app-push.nordiccrypto.workers.dev/")!
 }
 
 enum APIError: Error {

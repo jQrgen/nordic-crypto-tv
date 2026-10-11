@@ -43,6 +43,8 @@ class MainActivity : ComponentActivity() {
         } else {
             enableEdgeToEdge()
             if (Alerts.enabled(this)) Alerts.schedule(this)
+            // Registers with the push server, or tells it to forget this device.
+            if (Push.configured) Push.syncLater(this)
             setContent { PhoneApp(store, openStory) }
         }
     }
