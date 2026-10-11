@@ -27,6 +27,11 @@ targets:
       - path: NordicCrypto/Resources/Snapshot
         type: folder
         buildPhase: resources
+    dependencies:
+      # VideoPlayer lives in the _AVKit_SwiftUI overlay, whose player view subclasses
+      # AVPlayerView/AVPlayerViewController. Nothing else references AVKit on iOS and macOS,
+      # so the linker drops the autolinked framework and VideoPlayer aborts at runtime.
+      - sdk: AVKit.framework
     settings:
       base:
         # One bundle id on every platform gives a single universal purchase.
