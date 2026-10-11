@@ -86,8 +86,19 @@ cd android
 ```
 The Android app reads the same `Localizable.xcstrings`, so every platform says the same thing.
 Release builds are signed with the key named in `android/keystore.properties` (not in the repo).
-The [Android APK workflow](.github/workflows/android.yml) builds a signed APK on every push to
-`main` and publishes it to the `android-latest` release.
+The [Android workflow](.github/workflows/android.yml) builds a signed APK and app bundle (AAB) on
+every push to `main` and publishes both to the `android-latest` release. When the repository secret
+`PLAY_SERVICE_ACCOUNT_JSON` holds a Google Play service-account key with release permission for
+`no.cryptonordic.app`, it also uploads the AAB to Google Play internal testing (as a draft while the
+app is still a draft in Play Console). Version codes start above `ANDROID_VERSION_CODE_OFFSET`
+(default 100), because version code 1 was uploaded by hand. One-time setup:
+`gh secret set PLAY_SERVICE_ACCOUNT_JSON --repo jQrgen/nordic-crypto-tv < service-account.json`.
+
+The Google Play store listing lives in `android/fastlane/metadata/android/` (English and Norwegian
+Bokmål texts; icon, feature graphic, TV banner and screenshots for phone, 7-inch and 10-inch tablet
+and Android TV). The [store listing workflow](.github/workflows/android-listing.yml) uploads it with
+fastlane `supply` whenever it changes on `main`, using the same secret. Category, privacy policy
+(https://nordiccrypto.no/privacy/), Data safety, content rating and ads are set once in Play Console.
 
 ### Data
 The apps try `https://nordiccrypto.no/api/v1/` first, then the older addresses. The last good

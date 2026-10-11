@@ -3,3 +3,6 @@ build/
 local.properties
 keystore.properties
 *.jks
+.bundle/
+vendor/bundle/
+fastlane/report.xml

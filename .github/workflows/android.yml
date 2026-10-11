@@ -1,4 +1,4 @@
-name: Android APK
+name: Android APK and Play
 
 on:
   push:
@@ -38,13 +38,26 @@ jobs:
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=nordiccrypto\nkeyPassword=%s\n' \
             "$RUNNER_TEMP/release.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
 
-      - name: Build
+      - name: Build APK and app bundle
         env:
-          VERSION_CODE: ${{ github.run_number }}
+          # Version code 1 was uploaded to Google Play by hand; CI codes start above
+          # ANDROID_VERSION_CODE_OFFSET (default 100) so every upload is higher.
+          RUN_NUMBER: ${{ github.run_number }}
+          VERSION_CODE_OFFSET: ${{ vars.ANDROID_VERSION_CODE_OFFSET || '100' }}
         run: |
+          export VERSION_CODE=$(( RUN_NUMBER + VERSION_CODE_OFFSET ))
+          echo "versionCode $VERSION_CODE"
           cp ../NordicCrypto/Localizable.xcstrings app/src/main/assets/Localizable.xcstrings
-          ./gradlew --no-daemon :app:assembleRelease
+          ./gradlew --no-daemon :app:assembleRelease :app:bundleRelease
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/nordic-crypto.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/nordic-crypto.aab"
+
+      - name: Keep the app bundle as a run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nordic-crypto-aab-${{ github.run_number }}
+          path: ${{ runner.temp }}/nordic-crypto.aab
+          retention-days: 30
 
       - name: Publish to the android-latest release
         env:
@@ -56,4 +69,39 @@ jobs:
           gh release view android-latest >/dev/null 2>&1 || \
             gh release create android-latest --title "Android (latest build)" --notes "$notes" --prerelease --verify-tag
           gh release edit android-latest --notes "$notes"
-          gh release upload android-latest "$RUNNER_TEMP/nordic-crypto.apk" --clobber
+          gh release upload android-latest "$RUNNER_TEMP/nordic-crypto.apk" "$RUNNER_TEMP/nordic-crypto.aab" --clobber
+
+      - name: Check for the Google Play key
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set; skipping the Google Play upload (see README)."
+          fi
+
+      # Internal testing. While the app is still a draft in Play Console, Google only accepts
+      # draft releases, so a failed completed release is retried as a draft.
+      - name: Upload to Google Play internal testing
+        id: upload
+        if: steps.play.outputs.enabled == 'true'
+        continue-on-error: true
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: no.cryptonordic.app
+          releaseFiles: ${{ runner.temp }}/nordic-crypto.aab
+          track: internal
+          status: completed
+
+      - name: Upload to Google Play internal testing (draft app)
+        if: steps.play.outputs.enabled == 'true' && steps.upload.outcome == 'failure'
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: no.cryptonordic.app
+          releaseFiles: ${{ runner.temp }}/nordic-crypto.aab
+          track: internal
+          status: draft
