@@ -1,11 +1,13 @@
 import Foundation
-#if os(iOS) || os(macOS)
+#if os(iOS) || os(macOS) || os(visionOS)
 import Observation
 import UserNotifications
 
-/// Local notifications for new stories, filtered by country. Everything stays
-/// on the device: the app checks the public news feed and compares it with
-/// the stories it has already seen.
+/// Notifications for new stories, filtered by country. When the push server
+/// has this device (`PushRegistration`), new stories arrive as remote
+/// notifications and this class only remembers what it has seen. Otherwise it
+/// is the fallback: the app checks the public news feed itself and posts local
+/// notifications for stories it has not seen before.
 @MainActor
 @Observable
 final class NewsAlerts {
@@ -42,11 +44,13 @@ final class NewsAlerts {
             enabled = false
         }
         UserDefaults.standard.set(enabled, forKey: Key.enabled)
+        PushRegistration.shared.refresh()
     }
 
     func toggle(_ country: Country) {
         if countries.contains(country.rawValue) { countries.remove(country.rawValue) } else { countries.insert(country.rawValue) }
         UserDefaults.standard.set(Array(countries), forKey: Key.countries)
+        PushRegistration.shared.settingsChanged()
     }
 
     /// Announces stories not seen before from the chosen countries, then
@@ -63,7 +67,8 @@ final class NewsAlerts {
             let trimmed = seen.count > 500 ? Array(current) : Array(seen)
             d.set(trimmed, forKey: Key.seen)
         }
-        guard seenList != nil, enabled, !foreground else { return }
+        // The push server announces these when it has this device.
+        guard seenList != nil, enabled, !foreground, !PushRegistration.shared.active else { return }
         let wanted = fresh.filter { countries.contains($0.country ?? "") }
         guard !wanted.isEmpty else { return }
 

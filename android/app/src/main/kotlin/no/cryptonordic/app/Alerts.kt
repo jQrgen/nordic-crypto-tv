@@ -16,8 +16,10 @@ import androidx.work.WorkerParameters
 import java.util.concurrent.TimeUnit
 
 /**
- * Local notifications for new stories, per country. Everything stays on the
- * device: the app reads the public feed and compares it with what it has seen.
+ * Notifications for new stories, per country. When the push server has this
+ * device ([Push]), stories arrive through Firebase Cloud Messaging and this
+ * object only remembers what it has seen. Otherwise it is the fallback: the
+ * app reads the public feed and compares it with what it has seen.
  */
 object Alerts {
     private const val PREFS = "alerts"
@@ -31,12 +33,14 @@ object Alerts {
     fun setEnabled(c: Context, on: Boolean) {
         prefs(c).edit().putBoolean("enabled", on).apply()
         if (on) schedule(c) else WorkManager.getInstance(c).cancelUniqueWork("news-check")
+        Push.syncLater(c, force = true)
     }
 
     fun toggle(c: Context, country: Country) {
         val now = countries(c).toMutableSet()
         if (!now.add(country.code)) now.remove(country.code)
         prefs(c).edit().putStringSet("countries", now).apply()
+        Push.syncLater(c, force = true)
     }
 
     /** Checks every 15 minutes, the shortest period Android allows. */
@@ -52,7 +56,8 @@ object Alerts {
         val seen = seenBefore.orEmpty().toMutableSet()
         val fresh = news.filter { it.id !in seen }
         p.edit().putStringSet("seen", (seen + news.map { it.id }).let { if (it.size > 500) news.map { n -> n.id }.toSet() else it }).apply()
-        if (seenBefore == null || !enabled(c) || foreground) return
+        // The push server announces these when it has this device.
+        if (seenBefore == null || !enabled(c) || foreground || Push.active(c)) return
         val wanted = fresh.filter { it.country in countries(c) }
         if (wanted.isEmpty() || !canNotify(c)) return
 
@@ -89,6 +94,8 @@ object Alerts {
             val text = Api.fetch(applicationContext, "news.json") ?: return Result.retry()
             val news = runCatching { Api.json.decodeFromString<NewsFeed>(text).items }.getOrNull() ?: return Result.retry()
             process(applicationContext, news, foreground = false)
+            // Keeps the push registration current (at most one request a day when nothing changed).
+            if (Push.configured) Push.sync(applicationContext)
             return Result.success()
         }
     }

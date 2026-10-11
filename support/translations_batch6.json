@@ -1,0 +1,24 @@
+{
+  "New stories arrive as push notifications, delivered by Apple or Google. Our push server keeps only this device's push token, the countries you pick and your language. Turning notifications off deletes them.": {
+    "nb": "Nye saker kommer som pushvarsler, levert av Apple eller Google. Push-serveren vår lagrer bare push-tokenet til enheten, landene du velger og språket ditt. Slår du av varsler, slettes dette.",
+    "nn": "Nye saker kjem som pushvarsel, leverte av Apple eller Google. Push-tenaren vår lagrar berre push-tokenet til eininga, landa du vel og språket ditt. Slår du av varsel, blir dette sletta.",
+    "sv": "Nya artiklar kommer som pushnotiser, levererade av Apple eller Google. Vår pushserver sparar bara enhetens push-token, länderna du väljer och ditt språk. Stänger du av notiser raderas detta.",
+    "da": "Nye historier kommer som pushnotifikationer, leveret af Apple eller Google. Vores pushserver gemmer kun enhedens push-token, de lande, du vælger, og dit sprog. Slår du notifikationer fra, slettes det.",
+    "fi": "Uudet uutiset tulevat push-ilmoituksina Applen tai Googlen välittäminä. Push-palvelimemme tallentaa vain laitteen push-tunnuksen, valitsemasi maat ja kielesi. Kun poistat ilmoitukset käytöstä, tiedot poistetaan.",
+    "is": "Nýjar fréttir berast sem tilkynningar í gegnum Apple eða Google. Tilkynningaþjónninn okkar geymir aðeins tilkynningalykil tækisins, löndin sem þú velur og tungumálið þitt. Ef þú slekkur á tilkynningum er því eytt.",
+    "zh-Hans": "新报道会以推送通知的形式送达，由 Apple 或 Google 投递。我们的推送服务器只保存此设备的推送令牌、你选择的国家和你的语言。关闭通知即会删除这些信息。",
+    "hi": "नई ख़बरें पुश सूचनाओं के रूप में आती हैं, जिन्हें Apple या Google पहुँचाते हैं। हमारा पुश सर्वर केवल इस डिवाइस का पुश टोकन, आपके चुने हुए देश और आपकी भाषा रखता है। सूचनाएँ बंद करने पर यह जानकारी हटा दी जाती है।",
+    "es": "Las noticias nuevas llegan como notificaciones push, entregadas por Apple o Google. Nuestro servidor de notificaciones solo guarda el token push de este dispositivo, los países que elija y su idioma. Al desactivar las notificaciones, se eliminan.",
+    "fr": "Les nouveaux articles arrivent sous forme de notifications push, acheminées par Apple ou Google. Notre serveur de notifications ne conserve que le jeton push de cet appareil, les pays choisis et votre langue. Désactiver les notifications les supprime.",
+    "ar": "تصل الأخبار الجديدة كإشعارات فورية تُرسلها Apple أو Google. لا يحتفظ خادم الإشعارات لدينا إلا برمز الإشعارات لهذا الجهاز والدول التي تختارها ولغتك. يؤدي إيقاف الإشعارات إلى حذفها.",
+    "bn": "নতুন খবর পুশ নোটিফিকেশন হিসেবে আসে, যা Apple বা Google পৌঁছে দেয়। আমাদের পুশ সার্ভার শুধু এই ডিভাইসের পুশ টোকেন, আপনার বাছাই করা দেশ এবং আপনার ভাষা রাখে। নোটিফিকেশন বন্ধ করলে এগুলো মুছে যায়।",
+    "pt": "As notícias novas chegam como notificações push, entregues pela Apple ou pelo Google. Nosso servidor de notificações guarda apenas o token push deste dispositivo, os países que você escolher e o seu idioma. Desativar as notificações apaga esses dados.",
+    "ru": "Новые материалы приходят push-уведомлениями через Apple или Google. Наш сервер уведомлений хранит только push-токен этого устройства, выбранные вами страны и ваш язык. Если отключить уведомления, эти данные удаляются.",
+    "ur": "نئی خبریں پش نوٹیفکیشن کے طور پر آتی ہیں، جنہیں Apple یا Google پہنچاتے ہیں۔ ہمارا پش سرور صرف اس ڈیوائس کا پش ٹوکن، آپ کے منتخب کردہ ممالک اور آپ کی زبان رکھتا ہے۔ نوٹیفکیشن بند کرنے پر یہ حذف ہو جاتے ہیں۔",
+    "id": "Berita baru datang sebagai notifikasi push yang dikirim oleh Apple atau Google. Server push kami hanya menyimpan token push perangkat ini, negara yang Anda pilih, dan bahasa Anda. Mematikan notifikasi akan menghapusnya.",
+    "de": "Neue Meldungen kommen als Push-Mitteilungen, zugestellt von Apple oder Google. Unser Push-Server speichert nur das Push-Token dieses Geräts, die gewählten Länder und Ihre Sprache. Wenn Sie Mitteilungen ausschalten, wird dies gelöscht.",
+    "ja": "新しい記事はプッシュ通知で届きます（配信は Apple または Google）。プッシュサーバーが保存するのは、このデバイスのプッシュトークン、選んだ国、言語だけです。通知をオフにすると削除されます。",
+    "sw": "Habari mpya zinakuja kama arifa za push, zinazowasilishwa na Apple au Google. Seva yetu ya push huhifadhi tu tokeni ya push ya kifaa hiki, nchi unazochagua na lugha yako. Ukizima arifa, vinafutwa.",
+    "mr": "नवीन बातम्या पुश सूचनांच्या रूपात येतात, ज्या Apple किंवा Google पोहोचवतात. आमचा पुश सर्व्हर फक्त या डिव्हाइसचा पुश टोकन, तुम्ही निवडलेले देश आणि तुमची भाषा ठेवतो. सूचना बंद केल्यावर हे हटवले जाते."
+  }
+}

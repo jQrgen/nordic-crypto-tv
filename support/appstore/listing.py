@@ -45,7 +45,7 @@ ON EVERY SCREEN
 • Apple TV as an information screen: lead stories, events, a row per country and the latest headlines, each rotating on its own, with Radio Norge in the background. Play/Pause on the remote switches the radio on or off.
 
 PRIVATE BY DESIGN
-No account, no tracking, no ads. The app only reads public news data.
+No account, no tracking, no ads. Notifications are opt-in: our push server keeps only the device's push token, the countries you pick and your language, and deletes them when you turn notifications off.
 
 Headlines belong to their publishers. Nordic Crypto is news, not investment advice.""",
     },
@@ -82,7 +82,7 @@ PÅ ALLE SKJERMER
 • Apple TV som infoskjerm: hovedsaker, arrangementer, en rad per land og de siste overskriftene, som hver bytter innhold for seg, med Radio Norge i bakgrunnen. Play/Pause på fjernkontrollen skrur radioen av og på.
 
 PERSONVERN FRA START
-Ingen konto, ingen sporing, ingen reklame. Appen leser bare offentlige nyhetsdata.
+Ingen konto, ingen sporing, ingen reklame. Varsler slår du på selv: push-serveren vår lagrer bare push-tokenet til enheten, landene du velger og språket ditt, og sletter dem når du slår av varsler.
 
 Overskriftene tilhører utgiverne. Nordic Crypto er nyheter, ikke investeringsråd.""",
     },

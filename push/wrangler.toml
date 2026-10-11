@@ -1,0 +1,42 @@
+# Nordic Crypto app push server (Cloudflare Workers + D1 + Cron Trigger).
+# Polls the public news API and sends one notification per new story to the
+# iPhone, iPad, Mac, Vision Pro (APNs) and Android (FCM) devices that asked for
+# that story's country. See docs/push.md.
+#
+# Do not put secrets in this file. Set them with scripts/setup-push-secrets.sh:
+#   APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID, FCM_SERVICE_ACCOUNT_JSON
+name = "nordic-crypto-app-push"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = false
+
+# No request logs. The code never logs a push token.
+[observability]
+enabled = false
+
+# Every five minutes: check the news API, queue new stories, send what is queued.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+FEED_URL = "https://nordiccrypto.no/api/v1/news/latest.json"
+# Used while latest.json does not exist yet (404).
+FEED_FALLBACK_URL = "https://nordiccrypto.no/api/v1/news.json"
+APNS_TOPIC = "no.cryptonordic.tv"
+# Pushes sent per cron run. The Workers Free plan allows 50 subrequests per
+# run; raise this (up to about 900) on Workers Paid.
+SENDS_PER_RUN = "40"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nordic-crypto-app-push"
+database_id = "00000000-0000-0000-0000-000000000000"   # replaced at deploy time by deploy.sh (an id, not a secret)
+migrations_dir = "migrations"
+
+# Registration rate limit, counted by Cloudflare per location. The key is
+# never stored by this Worker.
+[[ratelimits]]
+name = "REGISTER_LIMIT"
+namespace_id = "7301"
+simple = { limit = 20, period = 60 }

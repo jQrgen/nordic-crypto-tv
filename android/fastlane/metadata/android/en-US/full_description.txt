@@ -23,7 +23,7 @@ ON EVERY SCREEN
 • Android TV as an information screen for the office, the meetup or the living room: lead stories, the agenda and the spotlight rotate on their own, with Radio Norge in the background. Play/Pause on the remote switches the radio on or off.
 
 PRIVATE BY DESIGN
-No account, no tracking, no ads. The app only reads public news data, and notifications are checked on the device.
+No account, no tracking, no ads. Notifications are opt-in: our push server keeps only the device's push token, the countries you pick and your language, and deletes them when you turn notifications off.
 
 Open source: github.com/jQrgen/nordic-crypto-tv
 

@@ -106,7 +106,7 @@ final class FeedStore {
             async let issuesFeed = client.fetch(NewslettersFeed.self, path: "newsletters.json")
             let (n, e, i) = try await (newsFeed, eventsFeed, issuesFeed)
             apply(n)
-            #if os(iOS) || os(macOS)
+            #if os(iOS) || os(macOS) || os(visionOS)
             NewsAlerts.shared.process(n.items, lang: lang)
             #endif
             events = e.events

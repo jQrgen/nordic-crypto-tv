@@ -2,18 +2,18 @@ import SwiftUI
 #if os(iOS)
 import BackgroundTasks
 import UserNotifications
-#elseif os(macOS)
+#elseif os(macOS) || os(visionOS)
 import UserNotifications
 #endif
 
 @main
 struct NordicCryptoApp: App {
-    #if os(iOS)
+    #if os(iOS) || os(visionOS)
     @UIApplicationDelegateAdaptor private var delegate: AppDelegate
     #elseif os(macOS)
     @NSApplicationDelegateAdaptor private var delegate: AppDelegate
     #endif
-    #if os(iOS) || os(macOS)
+    #if os(iOS) || os(macOS) || os(visionOS)
     @Environment(\.scenePhase) private var scenePhase
     #endif
 
@@ -33,7 +33,7 @@ struct NordicCryptoApp: App {
         #elseif os(macOS)
         .defaultSize(width: 1440, height: 872)
         #endif
-        #if os(iOS) || os(macOS)
+        #if os(iOS) || os(macOS) || os(visionOS)
         .onChange(of: scenePhase) { _, phase in
             NewsAlerts.shared.foreground = phase == .active
             #if os(iOS)
@@ -67,16 +67,32 @@ struct NordicCryptoApp: App {
     }
 }
 
-#if os(iOS)
+#if os(iOS) || os(visionOS)
 final class AppDelegate: NSObject, UIApplicationDelegate {
-    static let refreshTask = "no.cryptonordic.tv.refresh"
-
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+        #if os(iOS)
         Self.scheduleRefresh()
+        #endif
+        // Re-registers with the push server (or tells it to forget this device).
+        PushRegistration.shared.refresh()
         return true
     }
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        PushRegistration.shared.didRegister(deviceToken: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        PushRegistration.shared.didFailToRegister()
+    }
+}
+#endif
+
+#if os(iOS)
+extension AppDelegate {
+    static let refreshTask = "no.cryptonordic.tv.refresh"
 
     /// Asks iOS to wake the app for a news check in about 15 minutes.
     static func scheduleRefresh() {
@@ -93,6 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+        PushRegistration.shared.refresh()
         // Keeps checking while the app runs, also with every window closed.
         poller = Task.detached {
             while !Task.isCancelled {
@@ -103,6 +120,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func application(_ application: NSApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        PushRegistration.shared.didRegister(deviceToken: deviceToken)
+    }
+
+    func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        PushRegistration.shared.didFailToRegister()
+    }
 }
 
 /// The menu bar menu: the latest headlines and a way back to the window.

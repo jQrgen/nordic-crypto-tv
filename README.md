@@ -28,8 +28,10 @@ half of them behind paywalls. Nordic Crypto reads them all and gives you one cal
 - **A screen that stays on.** On Apple TV and Android TV the app is an information screen for the
   office, the meetup or the living room: lead stories, the agenda and the spotlight rotate on their
   own while Radio Norge plays in the background (Play/Pause turns it off).
-- **Private by design.** No account, no tracking, no ads. Notifications for new stories are checked
-  on the device.
+- **Private by design.** No account, no tracking, no ads. Notifications for new stories are opt-in
+  push notifications: our push server keeps only the device's push token, the chosen countries and
+  the language, and forgets them when you turn notifications off ([how it works](docs/push.md)). When
+  the push server cannot be reached, the app checks for new stories on the device instead.
 
 Not investment advice. Headlines belong to their publishers.
 
@@ -70,11 +72,11 @@ Not investment advice. Headlines belong to their publishers.
 
 | Platform | What you get |
 |---|---|
-| iPhone, iPad | Today, Countries, Events and Newsletter tabs; story and event pages that open the source; notifications per country |
-| Mac | The same in a window with a sidebar, a menu bar menu with the latest headlines, notifications every 15 minutes |
-| Apple Vision Pro | The iPad layout in a glass window; the newsreel opens in its own window |
+| iPhone, iPad | Today, Countries, Events and Newsletter tabs; story and event pages that open the source; push notifications per country |
+| Mac | The same in a window with a sidebar, a menu bar menu with the latest headlines, push notifications per country |
+| Apple Vision Pro | The iPad layout in a glass window; the newsreel opens in its own window; push notifications per country |
 | Apple TV | The "Kveldsnytt" information screen: lead story, agenda, spotlight, Radio Norge |
-| Android phone, tablet | Today, Countries, Events and Newsletter, notifications per country |
+| Android phone, tablet | Today, Countries, Events and Newsletter, push notifications per country |
 | Android TV | The same information screen as Apple TV, with Radio Norge |
 
 All of it is built on the open [Nordic Crypto data API](https://github.com/jQrgen/nordic-crypto) (`/api/v1/`).
@@ -114,6 +116,14 @@ Bokmål texts; icon, feature graphic, TV banner and screenshots for phone, 7-inc
 and Android TV). The [store listing workflow](.github/workflows/android-listing.yml) uploads it with
 fastlane `supply` whenever it changes on `main`, using the same secret. Category, privacy policy
 (https://nordiccrypto.no/privacy/), Data safety, content rating and ads are set once in Play Console.
+
+### Push notifications
+[`push/`](push/) is the push server, a Cloudflare Worker that polls the API every five minutes and
+sends one notification per new story through APNs (iPhone, iPad, Mac, Vision Pro) and Firebase Cloud
+Messaging (Android) to the devices that chose that story's country. Design, data kept, deployment and
+the one-time setup (`scripts/setup-push-secrets.sh`) are in [docs/push.md](docs/push.md). Tests:
+`cd push && npm ci && npm test`. The [Push server workflow](.github/workflows/push.yml) tests every
+change and deploys `main` once the Cloudflare token is set.
 
 ### Data
 The apps try `https://nordiccrypto.no/api/v1/` first, then the older addresses. The last good
