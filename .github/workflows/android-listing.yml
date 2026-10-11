@@ -56,9 +56,12 @@ jobs:
         env:
           SUPPLY_JSON_KEY_DATA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           VALIDATE_ONLY: ${{ inputs.validate_only || false }}
+        # supply always looks up a release on --track, even with changelogs skipped, and the
+        # default track (production) has none yet; internal holds the CI builds.
         run: |
           bundle exec fastlane supply \
             --package_name no.cryptonordic.app \
+            --track internal \
             --metadata_path fastlane/metadata/android \
             --skip_upload_apk true \
             --skip_upload_aab true \
