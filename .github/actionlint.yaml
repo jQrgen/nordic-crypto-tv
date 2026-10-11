@@ -1,0 +1,5 @@
+# xcode-27 is GitHub's hosted image with Xcode 27 (in preview, so actionlint
+# does not know the label yet).
+self-hosted-runner:
+  labels:
+    - xcode-27

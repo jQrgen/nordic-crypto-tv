@@ -1,0 +1,294 @@
+# Every Apple platform to TestFlight on every push to main
+# ---------------------------------------------------------
+# One multiplatform target (NordicCrypto), one bundle id (no.cryptonordic.tv),
+# four platforms: iPhone and iPad (ios), Apple TV (tvos), Apple Vision Pro
+# (visionos) and Mac (macos).
+#
+# gate        ubuntu-latest: checks that the signing secrets and variables exist
+#             and reads the version. Without them it passes with a notice and
+#             the other jobs are skipped (grey, not red), so main stays green
+#             until scripts/setup-signing-github.sh has been run.
+# plan        ubuntu-latest: one build number for the whole run, shared by all
+#             platforms: max(run number + BUILD_NUMBER_OFFSET, latest build in
+#             App Store Connect + 1): `fastlane ios build_number`.
+# testflight  one GitHub-hosted macOS job per platform (matrix, fail-fast off:
+#             a failing platform does not stop the others; each shows its own
+#             result), pinned Xcode 27.0:
+#               `fastlane ios beta platform:<p>`: signed App Store build with
+#               fastlane match (readonly, temporary keychain) and upload;
+#               `fastlane ios distribute platform:<p>`: waits for Apple's
+#               processing, sets "What to Test" from the commit message and
+#               gives the build to the internal group (internt) and the
+#               external group with the public link (Beta).
+# release     ubuntu-latest: when at least one platform reached TestFlight,
+#             creates the GitHub release testflight-v<version>-<build> naming
+#             the platforms that made it, with the commit message as notes.
+#
+# Runs on pushes to main (except Android-only changes) and by hand (Actions >
+# TestFlight > Run workflow, main only). Never on pull requests: this repo is
+# public, and secrets must never reach code from a fork. Pull requests get
+# .github/workflows/build.yml.
+#
+# Names only; values are set by scripts/setup-signing-github.sh and never
+# committed.
+# Secrets:
+#   APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_API_KEY_ISSUER_ID,
+#   APP_STORE_CONNECT_API_KEY (base64 of the .p8), MATCH_PASSWORD,
+#   MATCH_GIT_PRIVATE_KEY (read-only deploy key of the certificates repo)
+# Variables:
+#   APPLE_TEAM_ID, MATCH_GIT_URL, MATCH_GIT_BRANCH (default main),
+#   optional BUILD_NUMBER_OFFSET (default 10), TESTFLIGHT_INTERNAL_GROUP
+#   (default internt), TESTFLIGHT_EXTERNAL_GROUP (default Beta),
+#   TESTFLIGHT_REJECT_BUILD_WAITING_FOR_REVIEW (default false)
+
+name: TestFlight
+
+on:
+  push:
+    branches: [main]
+    # The Android app has its own workflow; changes only there do not need a
+    # new Apple build.
+    paths-ignore: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One run at a time; a newer pending run replaces an older pending one.
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+env:
+  FASTLANE_SKIP_UPDATE_CHECK: "1"
+  FASTLANE_HIDE_CHANGELOG: "1"
+  FASTLANE_OPT_OUT_USAGE: "1"
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+      build_number: ${{ steps.version.outputs.build_number }}
+      version_name: ${{ steps.version.outputs.version_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check signing secrets and variables
+        id: check
+        # Only "true"/"false" (is it set?) reaches the shell, never a value.
+        env:
+          HAS_APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID != '' }}
+          HAS_MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL != '' }}
+          HAS_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID != '' }}
+          HAS_APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID != '' }}
+          HAS_APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY != '' }}
+          HAS_MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD != '' }}
+          HAS_MATCH_GIT_PRIVATE_KEY: ${{ secrets.MATCH_GIT_PRIVATE_KEY != '' }}
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=TestFlight skipped::Only main is deployed (this run is on $GITHUB_REF)."
+            exit 0
+          fi
+          missing=""
+          for name in APPLE_TEAM_ID MATCH_GIT_URL APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_API_KEY_ISSUER_ID \
+                      APP_STORE_CONNECT_API_KEY MATCH_PASSWORD MATCH_GIT_PRIVATE_KEY; do
+            has="HAS_$name"
+            [ "${!has}" = true ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=TestFlight skipped::Not set yet:$missing. Run scripts/setup-signing-github.sh once (README, Deploying)."
+            echo "TestFlight skipped; not set yet:$missing. Run scripts/setup-signing-github.sh once (README, Deploying)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Version and build number
+        id: version
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+          BUILD_NUMBER_OFFSET: ${{ vars.BUILD_NUMBER_OFFSET || '10' }}
+        run: |
+          # Version: MARKETING_VERSION in project.yml. Build: this workflow's run
+          # number + offset (builds 1-10 were uploaded by hand); the plan job
+          # raises it above App Store Connect's latest build if needed.
+          version=$(sed -n 's/^[[:space:]]*MARKETING_VERSION:[[:space:]]*"\{0,1\}\([0-9.]*\)"\{0,1\}.*/\1/p' project.yml | head -n 1)
+          [ -n "$version" ] || { echo "::error::MARKETING_VERSION not found in project.yml"; exit 1; }
+          build=$(( RUN_NUMBER + BUILD_NUMBER_OFFSET ))
+          echo "build_number=$build" >> "$GITHUB_OUTPUT"
+          echo "version_name=$version" >> "$GITHUB_OUTPUT"
+          echo "VERSION_NAME=$version BUILD_NUMBER=$build"
+
+  plan:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      build_number: ${{ steps.number.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83 # v1.328.0
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - name: fastlane ios build_number
+        id: number
+        env:
+          BUILD_NUMBER: ${{ needs.gate.outputs.build_number }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: bundle exec fastlane ios build_number
+
+  testflight:
+    name: TestFlight ${{ matrix.platform }}
+    needs: [gate, plan]
+    runs-on: xcode-27
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, tvos, visionos, macos]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
+      BUILD_NUMBER: ${{ needs.plan.outputs.build_number }}
+      VERSION_NAME: ${{ needs.gate.outputs.version_name }}
+      TESTFLIGHT_PLATFORM: ${{ matrix.platform }}
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+      APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Full history: "What to Test" lists the commits a merge brought in.
+          fetch-depth: 0
+      - name: Toolchain
+        id: toolchain
+        run: |
+          sw_vers; xcodebuild -version; ruby -v; bundle -v
+          echo "ruby=$(ruby -e 'print RUBY_VERSION')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/bundle
+          key: gems-${{ runner.os }}-${{ runner.arch }}-ruby${{ steps.toolchain.outputs.ruby }}-${{ hashFiles('Gemfile.lock') }}
+      - name: Bundle install
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - name: Generate the Xcode project
+        run: scripts/xcodegen.sh
+      - name: Deploy key for the certificates repo
+        # The key goes to a 0600 file in this job's temp dir, used only through
+        # GIT_SSH_COMMAND, with github.com's host keys from the HTTPS API.
+        env:
+          MATCH_GIT_PRIVATE_KEY: ${{ secrets.MATCH_GIT_PRIVATE_KEY }}
+        run: |
+          umask 077
+          dir="$RUNNER_TEMP/match-ssh"
+          rm -rf "$dir"; mkdir -p "$dir"
+          printf '%s\n' "$MATCH_GIT_PRIVATE_KEY" > "$dir/id"
+          curl -fsSL https://api.github.com/meta \
+            | python3 -I -c 'import json,sys; [print("github.com", k) for k in json.load(sys.stdin)["ssh_keys"]]' \
+            > "$dir/known_hosts"
+          test -s "$dir/known_hosts"
+          echo "GIT_SSH_COMMAND=ssh -F /dev/null -i $dir/id -o IdentitiesOnly=yes -o IdentityAgent=none -o UserKnownHostsFile=$dir/known_hosts -o StrictHostKeyChecking=yes -o BatchMode=yes" >> "$GITHUB_ENV"
+      - name: Build, sign and upload (fastlane ios beta)
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
+          MATCH_GIT_BRANCH: ${{ vars.MATCH_GIT_BRANCH || 'main' }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane ios beta
+      - name: Clean up signing
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/match-ssh"
+          # The lane deletes its keychain in `ensure`; this covers a killed job.
+          security delete-keychain nordic-crypto-ci.keychain >/dev/null 2>&1 || true
+      - name: Distribute (fastlane ios distribute)
+        env:
+          TESTFLIGHT_INTERNAL_GROUP: ${{ vars.TESTFLIGHT_INTERNAL_GROUP }}
+          TESTFLIGHT_EXTERNAL_GROUP: ${{ vars.TESTFLIGHT_EXTERNAL_GROUP }}
+          TESTFLIGHT_REJECT_BUILD_WAITING_FOR_REVIEW: ${{ vars.TESTFLIGHT_REJECT_BUILD_WAITING_FOR_REVIEW }}
+        run: bundle exec fastlane ios distribute
+      - name: Mark this platform as deployed (for the GitHub release)
+        run: |
+          mkdir -p "$RUNNER_TEMP/deployed"
+          echo "${{ matrix.platform }}" > "$RUNNER_TEMP/deployed/${{ matrix.platform }}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deployed-${{ matrix.platform }}
+          path: ${{ runner.temp }}/deployed/${{ matrix.platform }}
+          retention-days: 1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ${{ matrix.platform }}-${{ needs.gate.outputs.version_name }}-${{ needs.plan.outputs.build_number }}
+          path: |
+            build/${{ matrix.platform }}/*.ipa
+            build/${{ matrix.platform }}/*.pkg
+            build/${{ matrix.platform }}/*.dSYM.zip
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # One GitHub release per deploy that reached TestFlight on at least one platform:
+  # tag testflight-v<version>-<build>, listing the platforms that made it.
+  release:
+    name: GitHub release
+    needs: [gate, plan, testflight]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: deployed-*
+          path: deployed
+          merge-multiple: true
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION_NAME: ${{ needs.gate.outputs.version_name }}
+          BUILD_NUMBER: ${{ needs.plan.outputs.build_number }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          shopt -s nullglob
+          names=()
+          for f in deployed/*; do
+            case "$(cat "$f")" in
+              ios) names+=("iPhone and iPad") ;;
+              tvos) names+=("Apple TV") ;;
+              visionos) names+=("Apple Vision Pro") ;;
+              macos) names+=("Mac") ;;
+            esac
+          done
+          if [ ${#names[@]} -eq 0 ]; then
+            echo "::notice::No platform reached TestFlight; no release."
+            exit 0
+          fi
+          platforms=$(printf '%s, ' "${names[@]}"); platforms=${platforms%, }
+          tag="testflight-v${VERSION_NAME}-${BUILD_NUMBER}"
+          message=${COMMIT_MESSAGE:-$(gh api "repos/$GH_REPO/commits/$GITHUB_SHA" --jq .commit.message)}
+          {
+            echo "Version ${VERSION_NAME} (${BUILD_NUMBER}) is on TestFlight for: ${platforms}."
+            echo
+            echo "Join the beta: https://testflight.apple.com/join/nQ2fpjZn"
+            echo
+            echo "Commit ${GITHUB_SHA::7}:"
+            echo
+            printf '%s\n' "$message"
+          } > notes.md
+          gh release create "$tag" --target "$GITHUB_SHA" \
+            --title "TestFlight ${VERSION_NAME} (${BUILD_NUMBER})" --notes-file notes.md

@@ -5,3 +5,7 @@ DerivedData/
 xcuserdata/
 .claude/
 design-canvas/
+.bundle/
+vendor/
+fastlane/report.xml
+fastlane/README.md
