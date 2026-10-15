@@ -4,7 +4,7 @@
 [![Licence: MIT](https://img.shields.io/github/license/jQrgen/nordic-crypto-tv)](https://github.com/jQrgen/nordic-crypto-tv/blob/main/LICENSE) [![Android release](https://img.shields.io/github/v/release/jQrgen/nordic-crypto-tv?include_prereleases&label=android)](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest) [![Release downloads](https://img.shields.io/github/downloads/jQrgen/nordic-crypto-tv/total)](https://github.com/jQrgen/nordic-crypto-tv/releases) [![Stars](https://img.shields.io/github/stars/jQrgen/nordic-crypto-tv?style=flat)](https://github.com/jQrgen/nordic-crypto-tv/stargazers) [![Forks](https://img.shields.io/github/forks/jQrgen/nordic-crypto-tv?style=flat)](https://github.com/jQrgen/nordic-crypto-tv/forks) [![Watchers](https://img.shields.io/github/watchers/jQrgen/nordic-crypto-tv?style=flat)](https://github.com/jQrgen/nordic-crypto-tv/watchers)
 ![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white) ![iPadOS](https://img.shields.io/badge/iPadOS-000000?logo=apple&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white) ![visionOS](https://img.shields.io/badge/visionOS-000000?logo=apple&logoColor=white) ![tvOS](https://img.shields.io/badge/tvOS-000000?logo=appletv&logoColor=white) ![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white) ![Android TV](https://img.shields.io/badge/Android%20TV-3DDC84?logo=androidtv&logoColor=white)
 [![Swift](https://img.shields.io/badge/Swift-F05138?logo=swift&logoColor=white)](https://www.swift.org) [![SwiftUI](https://img.shields.io/badge/SwiftUI-0A84FF?logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/) [![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose) [![XcodeGen](https://img.shields.io/badge/XcodeGen-project.yml-1575F9?logo=xcode&logoColor=white)](https://github.com/yonaskolb/XcodeGen)
-[![TestFlight beta](https://img.shields.io/badge/TestFlight-iPhone%20%7C%20iPad%20%7C%20Mac%20%7C%20Vision%20Pro%20%7C%20Apple%20TV-0D96F6?logo=appstore&logoColor=white)](https://testflight.apple.com/join/nQ2fpjZn) [![Download APK](https://img.shields.io/badge/APK-download-3DDC84?logo=android&logoColor=white)](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fnordiccrypto.no&label=nordiccrypto.no)](https://nordiccrypto.no) [![API](https://img.shields.io/badge/API-v1-1f6feb)](https://nordiccrypto.no/api/) [![Telegram](https://img.shields.io/badge/Telegram-%40nordiccryptochat-26A5E4?logo=telegram&logoColor=white)](https://t.me/nordiccryptochat) ![21 languages](https://img.shields.io/badge/UI-21%20languages-blue) [![No tracking](https://img.shields.io/badge/privacy-no%20tracking%2C%20no%20ads-success)](https://nordiccrypto.no/privacy/) ![Not investment advice](https://img.shields.io/badge/not-investment%20advice-lightgrey)
+[![TestFlight beta](https://img.shields.io/badge/TestFlight-iPhone%20%7C%20iPad%20%7C%20Mac%20%7C%20Vision%20Pro%20%7C%20Apple%20TV-0D96F6?logo=appstore&logoColor=white)](https://testflight.apple.com/join/nQ2fpjZn) [![Download APK](https://img.shields.io/badge/APK-download-3DDC84?logo=android&logoColor=white)](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest) [![Google Play open testing](https://img.shields.io/badge/Google%20Play-open%20testing-34A853?logo=googleplay&logoColor=white)](https://play.google.com/apps/testing/no.cryptonordic.app) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fnordiccrypto.no&label=nordiccrypto.no)](https://nordiccrypto.no) [![API](https://img.shields.io/badge/API-v1-1f6feb)](https://nordiccrypto.no/api/) [![Telegram](https://img.shields.io/badge/Telegram-%40nordiccryptochat-26A5E4?logo=telegram&logoColor=white)](https://t.me/nordiccryptochat) ![21 languages](https://img.shields.io/badge/UI-21%20languages-blue) [![No tracking](https://img.shields.io/badge/privacy-no%20tracking%2C%20no%20ads-success)](https://nordiccrypto.no/privacy/) ![Not investment advice](https://img.shields.io/badge/not-investment%20advice-lightgrey)
 
 **The Nordic crypto news desk on every screen you own.** Bitcoin, crypto and blockchain news from
 Norway, Sweden, Denmark, Finland and Iceland, summarised by people, in your language, on Apple TV,
@@ -39,6 +39,7 @@ Not investment advice. Headlines belong to their publishers.
 
 [![Join the TestFlight beta](https://img.shields.io/badge/TestFlight-iPhone%20·%20iPad%20·%20Mac%20·%20Vision%20Pro%20·%20Apple%20TV-0D96F6?style=for-the-badge&logo=apple&logoColor=white)](https://testflight.apple.com/join/nQ2fpjZn)
 [![Download the Android APK](https://img.shields.io/badge/Download%20APK-Android%20·%20Android%20TV-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/jQrgen/nordic-crypto-tv/releases/download/android-latest/nordic-crypto.apk)
+[![Join the Google Play beta](https://img.shields.io/badge/Google%20Play-open%20testing-34A853?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/apps/testing/no.cryptonordic.app)
 
 - **TestFlight (iPhone, iPad, Mac, Vision Pro, Apple TV):** https://testflight.apple.com/join/nQ2fpjZn
   Open the link on the iPhone, iPad, Mac or Apple Vision Pro and install TestFlight when asked; every
@@ -48,6 +49,8 @@ Not investment advice. Headlines belong to their publishers.
     [signup link](https://testflight.apple.com/join/nQ2fpjZn) on an iPhone, iPad or Mac signed in to the
     same Apple Account and accept the invitation. Nordic Crypto then shows up in TestFlight on the
     Apple TV, ready to install.
+- **Google Play open testing (phone, tablet, Android TV):** https://play.google.com/apps/testing/no.cryptonordic.app
+  (join, then install from Google Play; available once open testing is live)
 - **Android APK (phone, tablet, Android TV):** the [latest build](https://github.com/jQrgen/nordic-crypto-tv/releases/tag/android-latest)
   from CI, updated on every change. Open it on the device and allow installs from your browser. On
   Android TV, install it with a file manager or `adb install nordic-crypto.apk`.
@@ -108,7 +111,10 @@ every push to `main` and publishes both to the `android-latest` release. When th
 `PLAY_SERVICE_ACCOUNT_JSON` holds a Google Play service-account key with release permission for
 `no.cryptonordic.app`, it also uploads the AAB to Google Play internal testing (as a draft while the
 app is still a draft in Play Console). Version codes start above `ANDROID_VERSION_CODE_OFFSET`
-(default 100), because version code 1 was uploaded by hand. One-time setup:
+(default 100), because version code 1 was uploaded by hand. When the repository variable
+`PLAY_OPEN_TESTING` is `true`, each build that reached internal testing is also promoted to open
+testing (Play's `beta` track) with fastlane; turn it on once the Play Console setup tasks are done:
+`gh variable set PLAY_OPEN_TESTING --repo jQrgen/nordic-crypto-tv --body true`. One-time setup:
 `gh secret set PLAY_SERVICE_ACCOUNT_JSON --repo jQrgen/nordic-crypto-tv < service-account.json`.
 
 The Google Play store listing lives in `android/fastlane/metadata/android/` (English and Norwegian

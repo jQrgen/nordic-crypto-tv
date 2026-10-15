@@ -115,13 +115,51 @@ jobs:
           track: internal
           status: draft
 
+      # Open testing (public, Play's "beta" track): promotes the build that just reached internal
+      # testing. Off until the repository variable PLAY_OPEN_TESTING is "true", because Play only
+      # accepts it once the app's setup tasks are done and open testing is unlocked for the app.
+      - name: Open testing is off
+        if: steps.upload.outcome == 'success' && vars.PLAY_OPEN_TESTING != 'true'
+        run: echo "::notice::Google Play open testing is off; set the repository variable PLAY_OPEN_TESTING to true to promote each build (see README)."
+
+      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83 # v1.328.0
+        if: steps.upload.outcome == 'success' && vars.PLAY_OPEN_TESTING == 'true'
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: android
+
+      - name: Promote to Google Play open testing
+        id: open_testing
+        if: steps.upload.outcome == 'success' && vars.PLAY_OPEN_TESTING == 'true'
+        continue-on-error: true
+        env:
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          bundle exec fastlane supply \
+            --package_name no.cryptonordic.app \
+            --track internal \
+            --track_promote_to beta \
+            --track_promote_release_status completed \
+            --version_code "$VERSION_CODE" \
+            --skip_upload_apk true \
+            --skip_upload_aab true \
+            --skip_upload_metadata true \
+            --skip_upload_changelogs true \
+            --skip_upload_images true \
+            --skip_upload_screenshots true
+
+      - name: Open testing failed
+        if: steps.open_testing.outcome == 'failure'
+        run: echo "::warning::Promoting ${VERSION_NAME} (${VERSION_CODE}) to Google Play open testing failed (see the step above). The build stays in internal testing."
+
       # One GitHub release per build that reached Google Play: play-v<version>-<code>, with the
       # APK and the app bundle attached and the commit message as notes.
       - name: Create the GitHub release for this Google Play build
         if: steps.upload.outcome == 'success' || steps.upload_draft.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_STATUS: ${{ steps.upload.outcome == 'success' && 'released to internal testing' || 'uploaded as a draft release (the app is still a draft in Play Console)' }}
+          RELEASE_STATUS: ${{ steps.open_testing.outcome == 'success' && 'released to internal and open testing' || steps.upload.outcome == 'success' && 'released to internal testing' || 'uploaded as a draft release (the app is still a draft in Play Console)' }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           message=${COMMIT_MESSAGE:-$(git log -1 --format=%B)}
