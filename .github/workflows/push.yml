@@ -60,7 +60,7 @@ jobs:
 
   deploy:
     needs: test
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'jQrgen/nordic-crypto-tv'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'nordic-crypto-org/nordic-crypto-tv'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
