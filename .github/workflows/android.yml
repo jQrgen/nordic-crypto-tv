@@ -103,6 +103,7 @@ jobs:
           releaseFiles: ${{ runner.temp }}/nordic-crypto.aab
           track: internal
           status: completed
+          changesNotSentForReview: true
 
       - name: Upload to Google Play internal testing (draft app)
         id: upload_draft
@@ -114,6 +115,7 @@ jobs:
           releaseFiles: ${{ runner.temp }}/nordic-crypto.aab
           track: internal
           status: draft
+          changesNotSentForReview: true
 
       # Open testing (public, Play's "beta" track): promotes the build that just reached internal
       # testing. Off until the repository variable PLAY_OPEN_TESTING is "true", because Play only
@@ -147,7 +149,8 @@ jobs:
             --skip_upload_metadata true \
             --skip_upload_changelogs true \
             --skip_upload_images true \
-            --skip_upload_screenshots true
+            --skip_upload_screenshots true \
+            --changes_not_sent_for_review true
 
       - name: Open testing failed
         if: steps.open_testing.outcome == 'failure'
