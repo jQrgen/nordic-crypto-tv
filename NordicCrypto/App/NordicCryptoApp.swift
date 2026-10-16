@@ -56,9 +56,19 @@ struct NordicCryptoApp: App {
         #endif
 
         #if os(macOS)
+        Window("Contact us", id: "contact") {
+            ContactView()
+                .frame(minWidth: 480, minHeight: 520)
+        }
+        .defaultSize(width: 520, height: 640)
         Settings {
-            AlertSettingsView()
-                .frame(width: 460, height: 420)
+            TabView {
+                AlertSettingsView()
+                    .tabItem { Label("Notifications", systemImage: "bell") }
+                ContactView()
+                    .tabItem { Label("Contact us", systemImage: "envelope") }
+            }
+            .frame(width: 520, height: 560)
         }
         MenuBarExtra("Nordic Crypto", systemImage: "sparkle") {
             MenuBarHeadlines()
@@ -144,6 +154,7 @@ private struct MenuBarHeadlines: View {
             }
         }
         Divider()
+        Button("Contact us") { openWindow(id: "contact") }
         SettingsLink { Text("Notifications…") }
         Button("Quit Nordic Crypto") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")

@@ -5,6 +5,11 @@ import SwiftUI
 /// story with an aurora glow, cards under it, and the agenda and spotlight
 /// on the right. Every part keeps its place and rotates its own content.
 struct KveldsnyttLayout: View {
+    var onContact: () -> Void
+    /// True while the contact screen covers this page, so focus can return to Contact us.
+    var contactVisible: Bool
+    @FocusState private var contactFocused: Bool
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             K.ground
@@ -24,6 +29,15 @@ struct KveldsnyttLayout: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     VStack(spacing: 18) {
+                        Button(action: onContact) {
+                            Label("Contact us", systemImage: "envelope")
+                                .font(.system(size: 28, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                        }
+                        .buttonStyle(.bordered)
+                        .focused($contactFocused)
+                        .accessibilityIdentifier("contact-us")
                         KAgenda()
                         SpotlightModule(compact: true)
                             .frame(height: 196)   // room for the description sentence (2 lines)
@@ -43,6 +57,10 @@ struct KveldsnyttLayout: View {
             }
             .padding(.horizontal, 64)
             .padding(.vertical, 44)
+        }
+        .onAppear { contactFocused = true }
+        .onChange(of: contactVisible) { _, visible in
+            if !visible { contactFocused = true }
         }
     }
 }

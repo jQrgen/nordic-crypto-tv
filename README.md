@@ -78,9 +78,9 @@ Not investment advice. Headlines belong to their publishers.
 | iPhone, iPad | Today, Countries, Events and Newsletter tabs; story and event pages that open the source; push notifications per country |
 | Mac | The same in a window with a sidebar, a menu bar menu with the latest headlines, push notifications per country |
 | Apple Vision Pro | The iPad layout in a glass window; the newsreel opens in its own window; push notifications per country |
-| Apple TV | The "Kveldsnytt" information screen: lead story, agenda, spotlight, Radio Norge |
-| Android phone, tablet | Today, Countries, Events and Newsletter, push notifications per country |
-| Android TV | The same information screen as Apple TV, with Radio Norge |
+| Apple TV | The "Kveldsnytt" information screen: lead story, agenda, spotlight, Radio Norge, and Contact us |
+| Android phone, tablet | Today, Countries, Events, Newsletter and Contact us, push notifications per country |
+| Android TV | The same information screen as Apple TV, with Radio Norge and Contact us |
 
 All of it is built on the open [Nordic Crypto data API](https://github.com/jQrgen/nordic-crypto) (`/api/v1/`).
 
@@ -120,8 +120,11 @@ testing (Play's `beta` track) with fastlane; turn it on once the Play Console se
 The Google Play store listing lives in `android/fastlane/metadata/android/` (English and Norwegian
 Bokmål texts; icon, feature graphic, TV banner and screenshots for phone, 7-inch and 10-inch tablet
 and Android TV). The [store listing workflow](.github/workflows/android-listing.yml) uploads it with
-fastlane `supply` whenever it changes on `main`, using the same secret. Category, privacy policy
-(https://nordiccrypto.no/privacy/), Data safety, content rating and ads are set once in Play Console.
+fastlane `supply` whenever it changes on `main`, using the same secret. `contact_email.txt` and
+`contact_website.txt` in that folder are the listing contact email and website. supply does not
+upload those two files; enter them under Store listing contact details in Play Console. Category,
+privacy policy (https://nordiccrypto.no/privacy/), Data safety, content rating and ads are set once
+in Play Console.
 
 ### Push notifications
 [`push/`](push/) is the push server, a Cloudflare Worker that polls the API every five minutes and

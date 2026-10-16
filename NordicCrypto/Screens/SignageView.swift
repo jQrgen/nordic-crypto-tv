@@ -3,24 +3,26 @@ import SwiftUI
 
 /// Apple TV runs as an information screen ("Kveldsnytt" design): one page
 /// whose parts stay in place while each rotates its own content, so the
-/// viewer never loses context. Nothing is navigable; the remote only switches the radio
-/// (Play/Pause or a click).
+/// viewer never loses context. Play/Pause switches the radio. Contact us,
+/// at the top of the side column, opens the publisher's contact details;
+/// Menu closes that screen.
 struct SignageView: View {
-    @Environment(FeedStore.self) private var store
     @Environment(Radio.self) private var radio
-    @FocusState private var focused: Bool
+    @State private var showContact = false
 
     var body: some View {
-        KveldsnyttLayout()
-            .frame(width: 1920, height: 1080)
-            .ignoresSafeArea()
-        // One invisible focus target, so the remote's buttons reach us.
-        .focusable()
-        .focusEffectDisabled()
-        .focused($focused)
-        .onAppear { focused = true }
+        ZStack {
+            KveldsnyttLayout(onContact: { showContact = true }, contactVisible: showContact)
+                .disabled(showContact)
+                .accessibilityHidden(showContact)
+            if showContact {
+                ContactView(onClose: { showContact = false })
+                    .frame(width: 1920, height: 1080)
+            }
+        }
+        .frame(width: 1920, height: 1080)
+        .ignoresSafeArea()
         .onPlayPauseCommand { radio.toggle() }
-        .onTapGesture { radio.toggle() }
     }
 }
 

@@ -1,9 +1,11 @@
 package no.cryptonordic.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -13,16 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,16 +36,19 @@ import java.time.ZonedDateTime
 
 /**
  * The Android TV "Kveldsnytt" page, like the Apple TV one: a large lead story,
- * cards under it, the agenda and a slim spotlight on the right. Nothing is
- * navigable; play/pause or OK on the remote switches Radio Norge.
+ * cards under it, the agenda and a slim spotlight on the right. Play/Pause
+ * switches Radio Norge. OK on Contact us opens the publisher's contact details.
  */
 @Composable
 fun TvDashboard(store: Store, radio: Radio) {
     val feed by store.feed.collectAsState()
     val lang = Lang.current
-    val focus = remember { FocusRequester() }
+    val contactFocus = remember { FocusRequester() }
+    var showContact by remember { mutableStateOf(false) }
+    var contactFocused by remember { mutableStateOf(false) }
     val tick by produceState(0L) { while (true) { value = System.currentTimeMillis() / 1000; delay(1000) } }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    BackHandler(enabled = showContact) { showContact = false }
+    LaunchedEffect(showContact) { if (!showContact) runCatching { contactFocus.requestFocus() } }
 
     // Lay out on a fixed 1280 dp wide canvas so 720p, 1080p and 4K TVs show the same page.
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -49,33 +56,65 @@ fun TvDashboard(store: Store, radio: Radio) {
     CompositionLocalProvider(LocalDensity provides Density(base.density * maxWidth.value / 1280f, base.fontScale)) {
     Box(
         Modifier.fillMaxSize().background(NL.ground)
-            .focusRequester(focus).focusable()
-            .onKeyEvent {
-                val toggle = it.key == Key.MediaPlayPause || it.key == Key.DirectionCenter || it.key == Key.Enter
-                if (toggle && it.type == KeyEventType.KeyUp) { radio.toggle(); true } else false
+            .onPreviewKeyEvent {
+                if (it.type != KeyEventType.KeyUp) return@onPreviewKeyEvent false
+                when (it.key) {
+                    Key.MediaPlayPause -> { radio.toggle(); true }
+                    // OK still toggles the radio unless Contact us, or that screen, has focus.
+                    Key.DirectionCenter, Key.Enter, Key.NumPadEnter ->
+                        if (!showContact && !contactFocused) { radio.toggle(); true } else false
+                    else -> false
+                }
             }
     ) {
         Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.radialGradient(
             listOf(NL.accent.copy(alpha = 0.22f), Color.Transparent),
             center = androidx.compose.ui.geometry.Offset(300f, 0f), radius = 1400f)))
-        Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Header(feed, radio, tick)
-            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                    Lead(feed, lang, tick, Modifier.weight(1f))
-                    Cards(feed, lang, tick, Modifier.height(170.dp))
-                }
-                Column(Modifier.width(440.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Agenda(feed, tick, Modifier.weight(1f))
-                    Spotlight(feed, tick, Modifier.fillMaxWidth().height(96.dp))
-                    Text("</> " + Lang.tr("Open source on GitHub") + "  github.com/jQrgen/nordic-crypto-tv",
-                        color = NL.textTertiary, fontSize = 11.sp, modifier = Modifier.align(Alignment.End))
+        if (showContact) {
+            ContactScreen(large = true, onBack = { showContact = false })
+        } else {
+            Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                Header(feed, radio, tick)
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        Lead(feed, lang, tick, Modifier.weight(1f))
+                        Cards(feed, lang, tick, Modifier.height(170.dp))
+                    }
+                    Column(Modifier.width(440.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        ContactUsButton(contactFocus, { contactFocused = it }) { showContact = true }
+                        Agenda(feed, tick, Modifier.weight(1f))
+                        Spotlight(feed, tick, Modifier.fillMaxWidth().height(96.dp))
+                        Text("</> " + Lang.tr("Open source on GitHub") + "  github.com/jQrgen/nordic-crypto-tv",
+                            color = NL.textTertiary, fontSize = 11.sp, modifier = Modifier.align(Alignment.End))
+                    }
                 }
             }
         }
     }
     }
     }
+}
+
+@Composable
+private fun ContactUsButton(focus: FocusRequester, onFocused: (Boolean) -> Unit, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(14.dp)
+    Text(
+        Lang.tr("Contact us"),
+        color = if (focused) NL.ground else NL.textPrimary,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focus)
+            .onFocusChanged { focused = it.isFocused; onFocused(it.isFocused) }
+            .clip(shape)
+            .background(if (focused) NL.accent else NL.raised)
+            .border(2.dp, if (focused) NL.accent else NL.rule, shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    )
 }
 
 private fun <T> rotate(list: List<T>, tick: Long, every: Long, offset: Long = 0): Pair<T, Int>? =
