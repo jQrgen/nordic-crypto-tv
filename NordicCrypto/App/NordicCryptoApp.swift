@@ -60,8 +60,10 @@ struct NordicCryptoApp: App {
             AlertSettingsView()
                 .frame(width: 460, height: 420)
         }
-        MenuBarExtra("Nordic Crypto", systemImage: "sparkle") {
-            MenuBarHeadlines()
+        if !SnapshotMode.isOn {
+            MenuBarExtra("Nordic Crypto", systemImage: "sparkle") {
+                MenuBarHeadlines()
+            }
         }
         #endif
     }
@@ -72,6 +74,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+        if SnapshotMode.isOn { return true }
         #if os(iOS)
         Self.scheduleRefresh()
         #endif
@@ -109,6 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = NotificationRouter.shared
+        if SnapshotMode.isOn { return }
         PushRegistration.shared.refresh()
         // Keeps checking while the app runs, also with every window closed.
         poller = Task.detached {
