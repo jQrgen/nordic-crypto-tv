@@ -8,6 +8,9 @@ struct AlertSettingsView: View {
     @State private var push = PushRegistration.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    #if os(iOS) || os(visionOS)
+    @Environment(Router.self) private var router
+    #endif
 
     var body: some View {
         Form {
@@ -40,6 +43,17 @@ struct AlertSettingsView: View {
                 }
             }
             .disabled(!alerts.enabled)
+
+            #if os(iOS) || os(visionOS)
+            Section {
+                Button {
+                    dismiss()
+                    router.tab = .contact
+                } label: {
+                    Label("Contact us", systemImage: "envelope")
+                }
+            }
+            #endif
         }
         .formStyle(.grouped)
         .navigationTitle("Notifications")

@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum AppTab: String, Hashable, CaseIterable {
-    case today, countries, events, newsletter
+    case today, countries, events, newsletter, contact
 }
 
 enum Route: Hashable {
@@ -63,6 +63,9 @@ struct RootView: View {
             }
             Tab("Newsletter", systemImage: "envelope.open", value: AppTab.newsletter) {
                 stack(.newsletter) { NewsletterView() }
+            }
+            Tab("Contact us", systemImage: "envelope", value: AppTab.contact) {
+                NavigationStack { ContactView() }
             }
         }
         .tabViewStyle(.sidebarAdaptable)

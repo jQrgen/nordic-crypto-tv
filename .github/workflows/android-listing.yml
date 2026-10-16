@@ -2,6 +2,8 @@ name: Google Play store listing
 
 # Uploads the Google Play store listing (texts, icon, feature graphic, TV banner and screenshots)
 # from android/fastlane/metadata/android/ whenever it changes on main, or when run by hand.
+# contact_email.txt and contact_website.txt record the listing contact email and website.
+# supply does not upload those two files; enter them under Store listing contact details in Play Console.
 # Category, privacy policy, Data safety, content rating and ads are set once in Play Console.
 
 on:

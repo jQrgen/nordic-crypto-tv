@@ -12,6 +12,14 @@ enum APIConfig {
     ]
     static let site = URL(string: "https://cryptonordic.no/")!
     static let subscribe = URL(string: "https://cryptonordic.substack.com/subscribe")!
+    /// News publisher shown on the Contact us screen.
+    static let publisherName = "Nordic Crypto"
+    static let publisherCompany = "jQrgenCorp"
+    static let publisherOrgNo = "org.nr. 919 057 343"
+    static let contactEmail = "jqrgen@nordiccrypto.no"
+    static let contactMailto = URL(string: "mailto:jqrgen@nordiccrypto.no")!
+    static let website = URL(string: "https://nordiccrypto.no")!
+    static let contactPage = URL(string: "https://nordiccrypto.no/contact/")!
     /// The community chat.
     static let telegram = URL(string: "https://t.me/nordiccryptochat")!
     static let telegramHandle = "@nordiccryptochat"

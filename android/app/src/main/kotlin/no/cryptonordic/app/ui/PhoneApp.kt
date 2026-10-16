@@ -39,7 +39,8 @@ private sealed interface Route {
 }
 
 private enum class Tab(val key: String, val icon: String) {
-    TODAY("Today", "☀"), COUNTRIES("Countries", "◎"), EVENTS("Events", "▦"), NEWSLETTER("Newsletter", "✉")
+    TODAY("Today", "☀"), COUNTRIES("Countries", "◎"), EVENTS("Events", "▦"), NEWSLETTER("Newsletter", "✉"),
+    CONTACT("Contact us", "☎"),
 }
 
 @Composable
@@ -68,6 +69,7 @@ fun PhoneApp(store: Store, openStory: String?) {
                             Tab.COUNTRIES -> Countries(feed, lang) { stack.add(Route.Story(it)) }
                             Tab.EVENTS -> Events(feed, lang) { stack.add(Route.Event(it)) }
                             Tab.NEWSLETTER -> Newsletter(feed, lang) { stack.add(Route.Reader(it)) }
+                            Tab.CONTACT -> ContactScreen(large = false)
                         }
                     }
                 }
@@ -81,7 +83,7 @@ fun PhoneApp(store: Store, openStory: String?) {
                     }
                 }
             }
-            if (showAlerts) AlertSettings { showAlerts = false }
+            if (showAlerts) AlertSettings(dismiss = { showAlerts = false }, openContact = { showAlerts = false; tab = Tab.CONTACT })
         }
     }
 }
@@ -416,7 +418,7 @@ private fun Reader(issue: NewsletterIssue, lang: String, back: () -> Unit) {
 // MARK: Notifications
 
 @Composable
-private fun AlertSettings(dismiss: () -> Unit) {
+private fun AlertSettings(dismiss: () -> Unit, openContact: () -> Unit) {
     val ctx = LocalContext.current
     var enabled by remember { mutableStateOf(Alerts.enabled(ctx)) }
     var countries by remember { mutableStateOf(Alerts.countries(ctx)) }
@@ -426,6 +428,7 @@ private fun AlertSettings(dismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = dismiss,
         confirmButton = { TextButton(onClick = dismiss) { Text(Lang.tr("Done")) } },
+        dismissButton = { TextButton(onClick = openContact) { Text(Lang.tr("Contact us")) } },
         title = { Text(Lang.tr("Notifications")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

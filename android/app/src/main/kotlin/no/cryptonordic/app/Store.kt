@@ -45,6 +45,14 @@ object Api {
     const val TELEGRAM_HANDLE = "@nordiccryptochat"
     const val SUBSCRIBE = "https://cryptonordic.substack.com/subscribe"
     const val SOURCE_CODE = "https://github.com/jQrgen/nordic-crypto-tv"
+    /** News publisher shown on the Contact us screen and in the Play listing. */
+    const val PUBLISHER = "Nordic Crypto"
+    const val PUBLISHER_COMPANY = "jQrgenCorp"
+    const val PUBLISHER_ORG_NO = "org.nr. 919 057 343"
+    const val CONTACT_EMAIL = "jqrgen@nordiccrypto.no"
+    const val CONTACT_MAILTO = "mailto:jqrgen@nordiccrypto.no"
+    const val WEBSITE = "https://nordiccrypto.no"
+    const val CONTACT_PAGE = "https://nordiccrypto.no/contact/"
     const val RADIO = "https://live-bauerno.sharp-stream.com/radionorge_no_mp3"
 
     val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; explicitNulls = false }
